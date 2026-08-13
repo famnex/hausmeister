@@ -86,9 +86,9 @@ const limiter = rateLimit({
 app.use(limiter);
 
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 15,
-  message: 'Zu viele fehlerhafte Anmeldeversuche. Bitte warte 15 Minuten.'
+  windowMs: 10 * 60 * 1000,
+  max: 25,
+  message: 'Zu viele fehlerhafte Anmeldeversuche. Bitte warte 10 Minuten oder starte den Dienst neu (pm2 restart hausmeister-ticket-system).'
 });
 app.use('/hausmeister/login', loginLimiter);
 app.use('/admin/login', loginLimiter);
@@ -124,7 +124,7 @@ app.use((req, res, next) => {
 // Enforce Setup Check Middleware
 app.use(checkSetupCompleted);
 
-// Mount Dual-Mode Routers for full compatibility with any Nginx proxy_pass configuration
+// Mount Routers for all route variations
 app.use('/setup', setupRoutes);
 app.use('/hausmeister/setup', setupRoutes);
 
@@ -133,10 +133,12 @@ app.use('/hausmeister/admin', adminRoutes);
 
 app.use('/auth', authRoutes);
 app.use('/hausmeister/auth', authRoutes);
+app.use('/passwort-zuruecksetzen', authRoutes);
+app.use('/hausmeister/passwort-zuruecksetzen', authRoutes);
+app.use('/admin/passwort-zuruecksetzen', authRoutes);
 
 app.use('/hausmeister', caretakerRoutes);
 app.use('/caretaker', caretakerRoutes);
-app.use('/login', caretakerRoutes); // Directly handles /login if Nginx strips /hausmeister
 
 app.use('/', publicRoutes);
 

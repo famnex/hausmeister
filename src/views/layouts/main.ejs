@@ -18,7 +18,7 @@
 
       <nav class="main-nav">
         <% if (typeof currentRole !== 'undefined' && currentRole === 'caretaker') { %>
-          <a href="<%= url('/hausmeister') %>" class="nav-link">Tickets Overview</a>
+          <a href="<%= url('/hausmeister/dashboard') %>" class="nav-link">Tickets Overview</a>
           <a href="<%= url('/hausmeister/categories') %>" class="nav-link">Kategorien</a>
           <a href="<%= url('/hausmeister/employees') %>" class="nav-link">Mitarbeiter</a>
           <a href="<%= url('/hausmeister/passwort') %>" class="nav-link">Passwort</a>

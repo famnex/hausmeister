@@ -6,40 +6,8 @@ const TicketService = require('../services/ticket.service');
 const MailService = require('../services/mail.service');
 const { requireAuth } = require('../middleware/auth.middleware');
 
-// Caretaker Login Page
-router.get('/login', (req, res) => {
-  if (req.session && ['caretaker', 'admin'].includes(req.session.authenticatedRole)) {
-    return res.redirect('/hausmeister');
-  }
-  const schoolName = SettingsService.get('school_name', 'Schule');
-  res.render('caretaker/login', { schoolName, error: null, successMessage: req.query.msg || null });
-});
-
-router.post('/login', async (req, res) => {
-  const { password } = req.body;
-  const schoolName = SettingsService.get('school_name', 'Schule');
-
-  if (!password) {
-    return res.render('caretaker/login', { schoolName, error: 'Bitte gib das Passwort ein.', successMessage: null });
-  }
-
-  const isValid = await AuthService.verifyRolePassword('caretaker', password);
-
-  if (isValid) {
-    req.session.authenticatedRole = 'caretaker';
-    return res.redirect('/hausmeister');
-  } else {
-    const isAdmin = await AuthService.verifyRolePassword('admin', password);
-    if (isAdmin) {
-      req.session.authenticatedRole = 'admin';
-      return res.redirect('/hausmeister');
-    }
-    return res.render('caretaker/login', { schoolName, error: 'Ungültiges Hausmeister-Passwort.', successMessage: null });
-  }
-});
-
-// Caretaker Dashboard Root
-router.get('/', requireAuth('caretaker'), (req, res) => {
+// Helper to render Dashboard
+function renderDashboard(req, res) {
   const schoolName = SettingsService.get('school_name', 'Schule');
   const { status, category_id, employee_id, search } = req.query;
 
@@ -70,6 +38,49 @@ router.get('/', requireAuth('caretaker'), (req, res) => {
     stats,
     successMessage: req.query.msg || null
   });
+}
+
+// Caretaker Login Page
+router.get('/login', (req, res) => {
+  if (req.session && ['caretaker', 'admin'].includes(req.session.authenticatedRole)) {
+    return res.redirect('/hausmeister/dashboard');
+  }
+  const schoolName = SettingsService.get('school_name', 'Schule');
+  res.render('caretaker/login', { schoolName, error: null, successMessage: req.query.msg || null });
+});
+
+router.post('/login', async (req, res) => {
+  const { password } = req.body;
+  const schoolName = SettingsService.get('school_name', 'Schule');
+
+  if (!password) {
+    return res.render('caretaker/login', { schoolName, error: 'Bitte gib das Passwort ein.', successMessage: null });
+  }
+
+  const isValid = await AuthService.verifyRolePassword('caretaker', password);
+
+  if (isValid) {
+    req.session.authenticatedRole = 'caretaker';
+    return res.redirect('/hausmeister/dashboard');
+  } else {
+    const isAdmin = await AuthService.verifyRolePassword('admin', password);
+    if (isAdmin) {
+      req.session.authenticatedRole = 'admin';
+      return res.redirect('/hausmeister/dashboard');
+    }
+    return res.render('caretaker/login', { schoolName, error: 'Ungültiges Hausmeister-Passwort.', successMessage: null });
+  }
+});
+
+// Caretaker Dashboard
+router.get(['/dashboard', '/overview'], requireAuth('caretaker'), renderDashboard);
+
+// Caretaker Root Handler (If logged in, go to dashboard; if unauthenticated, pass through to public ticket form!)
+router.get('/', (req, res, next) => {
+  if (req.session && ['caretaker', 'admin'].includes(req.session.authenticatedRole)) {
+    return renderDashboard(req, res);
+  }
+  next();
 });
 
 // Fast Inline Assignment from Overview
@@ -79,9 +90,9 @@ router.post('/tickets/:id/assign-fast', requireAuth('caretaker'), (req, res) => 
 
   try {
     TicketService.assignEmployee(ticketId, employee_id ? parseInt(employee_id, 10) : null);
-    res.redirect('/hausmeister?msg=' + encodeURIComponent('Zuweisung gespeichert.'));
+    res.redirect('/hausmeister/dashboard?msg=' + encodeURIComponent('Zuweisung gespeichert.'));
   } catch (err) {
-    res.redirect('/hausmeister?msg=' + encodeURIComponent('Fehler beim Zuweisen: ' + err.message));
+    res.redirect('/hausmeister/dashboard?msg=' + encodeURIComponent('Fehler beim Zuweisen: ' + err.message));
   }
 });
 
@@ -115,7 +126,7 @@ router.post('/tickets/:id/update', requireAuth('caretaker'), async (req, res) =>
   const ticket = TicketService.getTicketById(ticketId);
 
   if (!ticket) {
-    return res.redirect('/hausmeister');
+    return res.redirect('/hausmeister/dashboard');
   }
 
   try {
