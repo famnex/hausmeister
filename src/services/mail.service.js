@@ -32,8 +32,14 @@ const MailService = {
 
       const smtpConfig = SettingsService.get('smtp_config', {});
       const schoolName = SettingsService.get('school_name', 'Schule');
+      const adminEmail = SettingsService.get('admin_email', '');
       const senderName = smtpConfig.from_name || `Hausmeister-System (${schoolName})`;
-      const senderMail = smtpConfig.from_email || smtpConfig.user || 'noreply@schule.de';
+
+      // Always send from the SMTP username. If from_email is set and differs from admin_email, use it, else fall back to SMTP user.
+      let senderMail = (smtpConfig.from_email && smtpConfig.from_email.trim());
+      if (!senderMail || (adminEmail && senderMail.toLowerCase() === adminEmail.toLowerCase())) {
+        senderMail = smtpConfig.user || 'noreply@schule.de';
+      }
 
       const info = await transporter.sendMail({
         from: `"${senderName}" <${senderMail}>`,
@@ -43,7 +49,7 @@ const MailService = {
         html
       });
 
-      console.log(`[MailService] E-Mail erfolgreich gesendet an ${to}. MessageID: ${info.messageId}`);
+      console.log(`[MailService] E-Mail erfolgreich gesendet von <${senderMail}> an ${to}. MessageID: ${info.messageId}`);
       return { success: true, messageId: info.messageId };
     } catch (err) {
       console.error(`[MailService] Fehler beim Senden an ${to}:`, err.message);

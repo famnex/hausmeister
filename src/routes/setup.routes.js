@@ -72,7 +72,7 @@ router.post('/', async (req, res) => {
       user: smtp_user ? smtp_user.trim() : '',
       pass: smtp_pass ? smtp_pass.trim() : '',
       secure: smtp_secure === 'on' || smtp_secure === 'true',
-      from_email: smtp_from_email ? smtp_from_email.trim() : admin_email.trim(),
+      from_email: smtp_from_email ? smtp_from_email.trim() : (smtp_user ? smtp_user.trim() : ''),
       from_name: smtp_from_name ? smtp_from_name.trim() : `Hausmeister-System (${school_name})`
     };
 

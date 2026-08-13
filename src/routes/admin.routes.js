@@ -62,13 +62,15 @@ router.post(['/', '/einstellungen'], requireAuth('admin'), upload.single('logo')
     if (caretaker_email) SettingsService.set('caretaker_email', caretaker_email.trim().toLowerCase());
 
     const currentSmtp = SettingsService.get('smtp_config', {});
+    const effectiveUser = smtp_user ? smtp_user.trim() : (currentSmtp.user || '');
+
     const newSmtp = {
       host: smtp_host ? smtp_host.trim() : '',
       port: smtp_port ? parseInt(smtp_port, 10) : 587,
-      user: smtp_user ? smtp_user.trim() : '',
+      user: effectiveUser,
       pass: (smtp_pass && smtp_pass.trim().length > 0) ? smtp_pass.trim() : (currentSmtp.pass || ''),
       secure: smtp_secure === 'on' || smtp_secure === 'true',
-      from_email: smtp_from_email ? smtp_from_email.trim() : admin_email.trim(),
+      from_email: smtp_from_email ? smtp_from_email.trim() : effectiveUser,
       from_name: smtp_from_name ? smtp_from_name.trim() : `Hausmeister-System (${school_name})`
     };
 
