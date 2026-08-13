@@ -8,7 +8,14 @@
     "dev": "node --watch src/server.js",
     "test": "node --test tests/app.test.js"
   },
-  "keywords": ["hausmeister", "ticket", "schule", "facility-management", "express", "sqlite"],
+  "keywords": [
+    "hausmeister",
+    "ticket",
+    "schule",
+    "facility-management",
+    "express",
+    "sqlite"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
@@ -17,6 +24,7 @@
     "dotenv": "^16.4.7",
     "ejs": "^3.1.10",
     "express": "^4.21.2",
+    "express-ejs-layouts": "^2.5.1",
     "express-rate-limit": "^7.5.0",
     "express-session": "^1.18.1",
     "helmet": "^8.0.0",
