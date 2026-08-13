@@ -131,11 +131,10 @@ app.use('/hausmeister/setup', setupRoutes);
 app.use('/admin', adminRoutes);
 app.use('/hausmeister/admin', adminRoutes);
 
+// Mount authRoutes broadly so the regex inside the router can match any path pattern
 app.use('/auth', authRoutes);
 app.use('/hausmeister/auth', authRoutes);
-app.use('/passwort-zuruecksetzen', authRoutes);
-app.use('/hausmeister/passwort-zuruecksetzen', authRoutes);
-app.use('/admin/passwort-zuruecksetzen', authRoutes);
+app.use('/', authRoutes);
 
 app.use('/hausmeister/hausmeister', caretakerRoutes); // Alias for legacy double /hausmeister email links
 app.use('/hausmeister', caretakerRoutes);
