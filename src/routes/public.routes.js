@@ -5,7 +5,7 @@ const TicketService = require('../services/ticket.service');
 const MailService = require('../services/mail.service');
 const upload = require('../middleware/upload.middleware');
 
-router.get('/', (req, res) => {
+router.get(['/', '/hausmeister'], (req, res) => {
   const schoolName = SettingsService.get('school_name', 'Schule');
   const schoolLogo = SettingsService.get('school_logo', null);
   const categories = TicketService.getAllCategories();
@@ -21,7 +21,7 @@ router.get('/', (req, res) => {
   });
 });
 
-router.post('/ticket', upload.array('attachments', 3), async (req, res) => {
+router.post(['/ticket', '/hausmeister/ticket'], upload.array('attachments', 3), async (req, res) => {
   const { submitter_name, submitter_email, category_id, location, description } = req.body;
   const categories = TicketService.getAllCategories();
   const schoolName = SettingsService.get('school_name', 'Schule');
@@ -64,7 +64,9 @@ router.post('/ticket', upload.array('attachments', 3), async (req, res) => {
     });
 
     const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-    const baseUrl = `${protocol}://${req.get('host')}`;
+    const host = req.get('host');
+    const basePath = res.locals.basePath || process.env.BASE_PATH || '';
+    const baseUrl = `${protocol}://${host}${basePath.replace(/\/$/, '')}`;
 
     // Send emails asynchronously (failures won't rollback ticket creation)
     MailService.sendTicketCreatedSubmitterConfirmation(ticket);

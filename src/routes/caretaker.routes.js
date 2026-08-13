@@ -75,14 +75,6 @@ router.post('/login', async (req, res) => {
 // Caretaker Dashboard
 router.get(['/dashboard', '/overview'], requireAuth('caretaker'), renderDashboard);
 
-// Caretaker Root Handler (If logged in, go to dashboard; if unauthenticated, pass through to public ticket form!)
-router.get('/', (req, res, next) => {
-  if (req.session && ['caretaker', 'admin'].includes(req.session.authenticatedRole)) {
-    return renderDashboard(req, res);
-  }
-  next();
-});
-
 // Fast Inline Assignment from Overview
 router.post('/tickets/:id/assign-fast', requireAuth('caretaker'), (req, res) => {
   const ticketId = parseInt(req.params.id, 10);

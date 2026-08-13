@@ -140,6 +140,7 @@ app.use('/admin/passwort-zuruecksetzen', authRoutes);
 app.use('/hausmeister', caretakerRoutes);
 app.use('/caretaker', caretakerRoutes);
 
+app.use('/hausmeister', publicRoutes);
 app.use('/', publicRoutes);
 
 // 404 Handler
