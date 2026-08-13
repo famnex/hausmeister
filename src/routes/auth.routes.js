@@ -30,11 +30,9 @@ router.post(['/:role/passwort-vergessen', '/passwort-vergessen'], async (req, re
   const targetRole = role === 'admin' ? 'admin' : 'caretaker';
   const recipientEmail = SettingsService.get(targetRole === 'admin' ? 'admin_email' : 'caretaker_email');
 
-  // Generic success message to prevent user enumeration / privacy leak
   const genericSuccess = 'Falls für diese Rolle eine gültige E-Mail-Adresse im System hinterlegt ist, wurde ein Link zum Zurücksetzen des Passworts versendet.';
 
   if (!recipientEmail) {
-    // Show same generic success message so attacker cannot check if email is configured
     return renderForgotPassword(res, role, null, genericSuccess);
   }
 
@@ -58,15 +56,17 @@ router.post(['/:role/passwort-vergessen', '/passwort-vergessen'], async (req, re
   }
 });
 
-// Perform Password Reset Page (Supports multiple route formats for 100% path compatibility)
+// Perform Password Reset Page (Accepts any path structure including extra subpaths or legacy routes)
 router.get([
   '/:role/passwort-zuruecksetzen',
-  '/passwort-zuruecksetzen'
+  '/passwort-zuruecksetzen',
+  '/hausmeister/passwort-zuruecksetzen',
+  '/admin/passwort-zuruecksetzen'
 ], (req, res) => {
   let roleParam = req.params.role || req.query.role;
   if (!roleParam && req.originalUrl) {
     if (req.originalUrl.includes('/admin')) roleParam = 'admin';
-    else if (req.originalUrl.includes('/hausmeister')) roleParam = 'hausmeister';
+    else roleParam = 'hausmeister';
   }
 
   const role = ['admin', 'administrator'].includes(roleParam) ? 'admin' : 'hausmeister';
@@ -90,12 +90,14 @@ router.get([
 
 router.post([
   '/:role/passwort-zuruecksetzen',
-  '/passwort-zuruecksetzen'
+  '/passwort-zuruecksetzen',
+  '/hausmeister/passwort-zuruecksetzen',
+  '/admin/passwort-zuruecksetzen'
 ], async (req, res) => {
   let roleParam = req.params.role || req.body.role || req.query.role;
   if (!roleParam && req.originalUrl) {
     if (req.originalUrl.includes('/admin')) roleParam = 'admin';
-    else if (req.originalUrl.includes('/hausmeister')) roleParam = 'hausmeister';
+    else roleParam = 'hausmeister';
   }
 
   const role = ['admin', 'administrator'].includes(roleParam) ? 'admin' : 'hausmeister';

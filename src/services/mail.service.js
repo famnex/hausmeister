@@ -84,7 +84,7 @@ const MailService = {
     if (!caretakerEmail) return { success: false, reason: 'Keine Hausmeister-E-Mail konfiguriert' };
 
     const schoolName = SettingsService.get('school_name', 'Schule');
-    const ticketUrl = `${baseUrl}/hausmeister/tickets/${ticket.id}`;
+    const ticketUrl = `${baseUrl.replace(/\/$/, '')}/hausmeister/tickets/${ticket.id}`;
     const subject = `[Neues Ticket] ${ticket.ticket_number}: ${ticket.category_name_snapshot} in ${ticket.location}`;
     const text = `Neues Ticket erhalten!\n\nTicketnummer: ${ticket.ticket_number}\nMeldende(r): ${ticket.submitter_name} (${ticket.submitter_email})\nKategorie: ${ticket.category_name_snapshot}\nOrt/Raum: ${ticket.location}\n\nBeschreibung:\n${ticket.description}\n\nLink zum Ticket: ${ticketUrl}`;
     const html = `
@@ -126,9 +126,19 @@ const MailService = {
 
   async sendPasswordResetMail(to, role, token, protocol, host, basePath = '') {
     const roleName = role === 'admin' ? 'Administrator' : 'Hausmeister';
-    const cleanBase = basePath.replace(/\/$/, '');
-    const resetPath = role === 'admin' ? '/admin/passwort-zuruecksetzen' : '/hausmeister/passwort-zuruecksetzen';
-    const resetUrl = `${protocol}://${host}${cleanBase}${resetPath}?token=${token}`;
+    
+    // Normalize basePath: avoid duplicated /hausmeister in URL
+    let cleanBase = (basePath || '').replace(/\/$/, '');
+
+    const resetPath = role === 'admin' ? '/admin/passwort-zuruecksetzen' : '/passwort-zuruecksetzen';
+    
+    // Construct single, clean URL without duplicate subpaths
+    let fullPath = resetPath;
+    if (cleanBase && !resetPath.startsWith(cleanBase)) {
+      fullPath = cleanBase + resetPath;
+    }
+
+    const resetUrl = `${protocol}://${host}${fullPath}?token=${token}`;
     const schoolName = SettingsService.get('school_name', 'Schule');
 
     const subject = `Passwort zurücksetzen für ${roleName} - ${schoolName}`;
