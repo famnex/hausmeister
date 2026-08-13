@@ -1,0 +1,145 @@
+<div style="max-width: 900px; margin: 0 auto;">
+  <div style="margin-bottom: 1rem;">
+    <a href="/hausmeister" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem;">&larr; Zurück zur Übersicht</a>
+  </div>
+
+  <% if (successMessage) { %>
+    <div class="alert alert-success"><%= successMessage %></div>
+  <% } %>
+
+  <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+    <!-- Main Detail -->
+    <div>
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1rem;">
+          <div>
+            <h1 style="color: var(--primary); font-size: 1.5rem; font-weight: 700; margin: 0;">
+              Ticket <%= ticket.ticket_number %>
+            </h1>
+            <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">
+              Erstellt am <%= new Date(ticket.created_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+            </div>
+          </div>
+          <span class="badge badge-<%= ticket.status %>" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">
+            <%= ticket.status === 'offen' ? 'Offen' : (ticket.status === 'in_bearbeitung' ? 'In Bearbeitung' : 'Abgeschlossen') %>
+          </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; background: #f8fafc; padding: 1rem; border-radius: var(--radius); margin-bottom: 1.5rem; font-size: 0.9rem;">
+          <div>
+            <strong>Meldende Person:</strong><br>
+            <%= ticket.submitter_name %><br>
+            <a href="mailto:<%= ticket.submitter_email %>" style="color: var(--accent);"><%= ticket.submitter_email %></a>
+          </div>
+          <div>
+            <strong>Ort / Raum:</strong><br>
+            <%= ticket.location %><br>
+            <span style="color: var(--text-muted);">Kategorie: <%= ticket.category_name_snapshot %></span>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">Beschreibung des Problems</h3>
+          <div style="white-space: pre-wrap; background: #fff; border: 1px solid var(--border); padding: 1rem; border-radius: var(--radius); font-size: 0.95rem;">
+            <%= ticket.description %>
+          </div>
+        </div>
+
+        <% if (ticket.attachments && ticket.attachments.length > 0) { %>
+          <div style="margin-bottom: 1.5rem;">
+            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">Angehängte Dateien</h3>
+            <ul style="list-style: none; padding: 0;">
+              <% ticket.attachments.forEach(att => { %>
+                <li style="margin-bottom: 0.5rem;">
+                  <a href="/uploads/<%= att.filename %>" target="_blank" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                    &#128206; <%= att.original_name %> (<%= (att.size_bytes / 1024).toFixed(1) %> KB)
+                  </a>
+                </li>
+              <% }); %>
+            </ul>
+          </div>
+        <% } %>
+      </div>
+
+      <!-- Internal Comments Section -->
+      <div class="card">
+        <h3 class="card-title">Interne Notizen & Kommentare</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Diese Kommentare sind nur für das Hausmeister-Team sichtbar und werden <strong>niemals</strong> an den Meldenden gesendet.
+        </p>
+
+        <form action="/hausmeister/tickets/<%= ticket.id %>/comment" method="POST" style="margin-bottom: 1.5rem;">
+          <div class="form-group">
+            <input type="text" name="author_name" class="form-control" placeholder="Dein Kürzel / Name (optional)" style="margin-bottom: 0.5rem;">
+            <textarea name="comment_text" class="form-control" required placeholder="Neuen internen Hinweis verfassen..." style="min-height: 80px;"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">Kommentar speichern</button>
+        </form>
+
+        <div class="timeline">
+          <% if (!ticket.comments || ticket.comments.length === 0) { %>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Noch keine internen Kommentare vorhanden.</div>
+          <% } %>
+          <% (ticket.comments || []).forEach(c => { %>
+            <div class="timeline-item">
+              <div class="timeline-header">
+                <span class="timeline-author"><%= c.author_name || 'Hausmeister' %></span>
+                <span><%= new Date(c.created_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></span>
+              </div>
+              <div style="white-space: pre-wrap; font-size: 0.9rem;"><%= c.comment_text %></div>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar Actions -->
+    <div>
+      <div class="card">
+        <h3 class="card-title" style="font-size: 1.1rem;">Ticket verwalten</h3>
+
+        <form action="/hausmeister/tickets/<%= ticket.id %>/update" method="POST">
+          <div class="form-group">
+            <label for="status">Status ändern</label>
+            <select id="status" name="status" class="form-control">
+              <option value="offen" <%= ticket.status === 'offen' ? 'selected' : '' %>>Offen</option>
+              <option value="in_bearbeitung" <%= ticket.status === 'in_bearbeitung' ? 'selected' : '' %>>In Bearbeitung</option>
+              <option value="abgeschlossen" <%= ticket.status === 'abgeschlossen' ? 'selected' : '' %>>Abgeschlossen</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="assigned_employee_id">Zugewiesener Mitarbeiter</label>
+            <select id="assigned_employee_id" name="assigned_employee_id" class="form-control">
+              <option value="">-- Nicht zugewiesen --</option>
+              <% employees.forEach(emp => { %>
+                <option value="<%= emp.id %>" <%= ticket.assigned_employee_id == emp.id ? 'selected' : '' %>>
+                  <%= emp.name %> <%= !emp.is_active ? '(Inaktiv)' : '' %>
+                </option>
+              <% }); %>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+            Änderungen speichern
+          </button>
+        </form>
+      </div>
+
+      <!-- Audit History Log -->
+      <div class="card">
+        <h3 class="card-title" style="font-size: 1rem;">Verlauf & Audit-Log</h3>
+        <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.5rem;">
+          <% (ticket.history || []).forEach(h => { %>
+            <div style="border-bottom: 1px solid var(--border); padding-bottom: 0.35rem;">
+              <div><%= h.details %></div>
+              <div style="color: #94a3b8; font-size: 0.75rem;">
+                <%= new Date(h.created_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) %>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

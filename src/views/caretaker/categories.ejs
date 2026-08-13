@@ -1,0 +1,69 @@
+<div style="max-width: 800px; margin: 0 auto;">
+  <div style="margin-bottom: 1rem;">
+    <a href="/hausmeister" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem;">&larr; Zurück zum Dashboard</a>
+  </div>
+
+  <h1 style="color: var(--primary); font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">Kategorien verwalten</h1>
+
+  <% if (successMessage) { %>
+    <div class="alert alert-success"><%= successMessage %></div>
+  <% } %>
+
+  <div class="card">
+    <h3 class="card-title" style="font-size: 1.1rem;">Neue Kategorie hinzufügen</h3>
+    <form action="/hausmeister/categories/add" method="POST" class="form-row" style="align-items: flex-end;">
+      <div class="form-group" style="flex: 3; margin-bottom: 0;">
+        <label for="name">Kategoriename *</label>
+        <input type="text" id="name" name="name" class="form-control" required placeholder="z. B. EDV / IT-Geräte">
+      </div>
+      <div class="form-group" style="flex: 1; margin-bottom: 0;">
+        <label for="sort_order">Sortierung</label>
+        <input type="number" id="sort_order" name="sort_order" class="form-control" value="0">
+      </div>
+      <button type="submit" class="btn btn-primary" style="height: 38px;">Hinzufügen</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title" style="font-size: 1.1rem;">Bestehende Kategorien</h3>
+    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+      Deaktivierte Kategorien stehen für neue Schadensmeldungen nicht mehr zur Auswahl, bleiben in alten Tickets jedoch erhalten.
+    </p>
+
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Sortierreihenfolge</th>
+            <th>Status</th>
+            <th style="text-align: right;">Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% categories.forEach(cat => { %>
+            <tr>
+              <form action="/hausmeister/categories/<%= cat.id %>/edit" method="POST">
+                <td>
+                  <input type="text" name="name" class="form-control" value="<%= cat.name %>" required style="padding: 0.35rem 0.5rem;">
+                </td>
+                <td style="width: 120px;">
+                  <input type="number" name="sort_order" class="form-control" value="<%= cat.sort_order %>" style="padding: 0.35rem 0.5rem;">
+                </td>
+                <td>
+                  <label style="font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.35rem;">
+                    <input type="checkbox" name="is_active" <%= cat.is_active ? 'checked' : '' %>>
+                    Aktiv
+                  </label>
+                </td>
+                <td style="text-align: right;">
+                  <button type="submit" class="btn btn-secondary btn-sm">Speichern</button>
+                </td>
+              </form>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,150 @@
+<div>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <h1 style="color: var(--primary); font-size: 1.5rem; font-weight: 700;">Hausmeister Dashboard</h1>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Alle Schadensmeldungen im Überblick</p>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+      <a href="/hausmeister/categories" class="btn btn-secondary btn-sm">Kategorien verwalten</a>
+      <a href="/hausmeister/employees" class="btn btn-secondary btn-sm">Mitarbeiter verwalten</a>
+    </div>
+  </div>
+
+  <% if (successMessage) { %>
+    <div class="alert alert-success"><%= successMessage %></div>
+  <% } %>
+
+  <!-- Statistics -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-number" style="color: var(--warning);"><%= stats.open %></span>
+      <span class="stat-label">Offene Tickets</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number" style="color: var(--primary);"><%= stats.inProgress %></span>
+      <span class="stat-label">In Bearbeitung</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number" style="color: var(--success);"><%= stats.closed %></span>
+      <span class="stat-label">Abgeschlossen</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number" style="color: var(--danger);"><%= stats.unassigned %></span>
+      <span class="stat-label">Nicht zugewiesen</span>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <form action="/hausmeister" method="GET" class="filter-form">
+      <div class="filter-group">
+        <label for="status">Status</label>
+        <select id="status" name="status" class="form-control">
+          <option value="">Alle Status</option>
+          <option value="offen" <%= filters.status === 'offen' ? 'selected' : '' %>>Offen</option>
+          <option value="in_bearbeitung" <%= filters.status === 'in_bearbeitung' ? 'selected' : '' %>>In Bearbeitung</option>
+          <option value="abgeschlossen" <%= filters.status === 'abgeschlossen' ? 'selected' : '' %>>Abgeschlossen</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="category_id">Kategorie</label>
+        <select id="category_id" name="category_id" class="form-control">
+          <option value="">Alle Kategorien</option>
+          <% categories.forEach(cat => { %>
+            <option value="<%= cat.id %>" <%= filters.category_id == cat.id ? 'selected' : '' %>><%= cat.name %></option>
+          <% }); %>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="employee_id">Zugewiesener Mitarbeiter</label>
+        <select id="employee_id" name="employee_id" class="form-control">
+          <option value="">Alle Mitarbeiter</option>
+          <option value="unassigned" <%= filters.employee_id === 'unassigned' ? 'selected' : '' %>>-- Nicht zugewiesen --</option>
+          <% employees.forEach(emp => { %>
+            <option value="<%= emp.id %>" <%= filters.employee_id == emp.id ? 'selected' : '' %>><%= emp.name %></option>
+          <% }); %>
+        </select>
+      </div>
+
+      <div class="filter-group" style="flex: 2;">
+        <label for="search">Suchbegriff</label>
+        <input type="text" id="search" name="search" class="form-control" placeholder="Ticketnummer, Name, Ort..." value="<%= filters.search %>">
+      </div>
+
+      <div>
+        <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1rem;">Filtern</button>
+        <a href="/hausmeister" class="btn btn-secondary" style="padding: 0.65rem 1rem;">Zurücksetzen</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Tickets Table -->
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Nr.</th>
+          <th>Datum</th>
+          <th>Status</th>
+          <th>Kategorie</th>
+          <th>Ort / Raum</th>
+          <th>Meldende(r)</th>
+          <th>Zugewiesen an</th>
+          <th style="text-align: right;">Aktion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (tickets.length === 0) { %>
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+              Keine Tickets für die gewählten Filter gefunden.
+            </td>
+          </tr>
+        <% } %>
+        <% tickets.forEach(t => { %>
+          <tr>
+            <td>
+              <a href="/hausmeister/tickets/<%= t.id %>" style="font-weight: 700; color: var(--primary); text-decoration: none;">
+                <%= t.ticket_number %>
+              </a>
+            </td>
+            <td style="font-size: 0.85rem; color: var(--text-muted); white-space: nowrap;">
+              <%= new Date(t.created_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+            </td>
+            <td>
+              <span class="badge badge-<%= t.status %>">
+                <%= t.status === 'offen' ? 'Offen' : (t.status === 'in_bearbeitung' ? 'In Bearbeitung' : 'Abgeschlossen') %>
+              </span>
+            </td>
+            <td><%= t.category_name_snapshot %></td>
+            <td><strong><%= t.location %></strong></td>
+            <td>
+              <div><%= t.submitter_name %></div>
+              <div style="font-size: 0.8rem; color: var(--text-muted);"><%= t.submitter_email %></div>
+            </td>
+            <td>
+              <!-- Fast Inline Employee Assignment -->
+              <form action="/hausmeister/tickets/<%= t.id %>/assign-fast" method="POST" style="margin: 0;">
+                <select name="employee_id" onchange="this.form.submit()" class="form-control" style="font-size: 0.85rem; padding: 0.3rem 0.5rem; min-width: 140px;">
+                  <option value="">-- Nicht zugewiesen --</option>
+                  <% employees.forEach(emp => { %>
+                    <option value="<%= emp.id %>" <%= t.assigned_employee_id == emp.id ? 'selected' : '' %>>
+                      <%= emp.name %> <%= !emp.is_active ? '(Inaktiv)' : '' %>
+                    </option>
+                  <% }); %>
+                </select>
+              </form>
+            </td>
+            <td style="text-align: right; white-space: nowrap;">
+              <a href="/hausmeister/tickets/<%= t.id %>" class="btn btn-secondary btn-sm">
+                Details &rarr;
+              </a>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+</div>

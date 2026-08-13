@@ -1,0 +1,111 @@
+<div style="max-width: 800px; margin: 0 auto;">
+  <h1 style="color: var(--primary); font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">System-Einstellungen</h1>
+
+  <% if (successMessage) { %>
+    <div class="alert alert-success"><%= successMessage %></div>
+  <% } %>
+
+  <% if (error) { %>
+    <div class="alert alert-danger"><%= error %></div>
+  <% } %>
+
+  <div class="card">
+    <h2 class="card-title" style="font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+      1. Allgemeine Schuleinstellungen
+    </h2>
+
+    <form action="/admin/einstellungen" method="POST" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="school_name">Name der Schule *</label>
+        <input type="text" id="school_name" name="school_name" class="form-control" required value="<%= schoolName %>">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="caretaker_email">Hausmeister Kontakt E-Mail *</label>
+          <input type="email" id="caretaker_email" name="caretaker_email" class="form-control" required value="<%= caretakerEmail %>">
+          <div class="help-text">Erhält Benachrichtigungen bei neuen Tickets.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="admin_email">Administrator Kontakt E-Mail *</label>
+          <input type="email" id="admin_email" name="admin_email" class="form-control" required value="<%= adminEmail %>">
+          <div class="help-text">Für Systemmeldungen & Passwort-Resets.</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="logo">Schullogo (optional)</label>
+        <% if (schoolLogo) { %>
+          <div style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 1rem;">
+            <img src="<%= schoolLogo %>" alt="Aktuelles Logo" style="max-height: 40px; border: 1px solid var(--border); padding: 2px; border-radius: 4px;">
+            <span style="font-size: 0.85rem; color: var(--text-muted);">Aktuelles Logo vorhanden.</span>
+          </div>
+        <% } %>
+        <input type="file" id="logo" name="logo" class="form-control" accept="image/*">
+      </div>
+
+      <h2 class="card-title" style="font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-top: 2rem;">
+        2. SMTP E-Mail Server-Einstellungen
+      </h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="smtp_host">SMTP Server / Host</label>
+          <input type="text" id="smtp_host" name="smtp_host" class="form-control" placeholder="smtp.schule.de" value="<%= smtpConfig.host || '' %>">
+        </div>
+        <div class="form-group">
+          <label for="smtp_port">Port</label>
+          <input type="number" id="smtp_port" name="smtp_port" class="form-control" placeholder="587" value="<%= smtpConfig.port || '587' %>">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="smtp_user">SMTP Benutzername</label>
+          <input type="text" id="smtp_user" name="smtp_user" class="form-control" placeholder="Benutzername" value="<%= smtpConfig.user || '' %>">
+        </div>
+        <div class="form-group">
+          <label for="smtp_pass">SMTP Passwort</label>
+          <input type="password" id="smtp_pass" name="smtp_pass" class="form-control" placeholder="<%= smtpConfig.pass ? '•••••••• (unverändert)' : 'Passwort eingeben' %>">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="smtp_from_email">Absender E-Mail-Adresse</label>
+          <input type="email" id="smtp_from_email" name="smtp_from_email" class="form-control" placeholder="noreply@schule.de" value="<%= smtpConfig.from_email || '' %>">
+        </div>
+        <div class="form-group">
+          <label for="smtp_from_name">Absender Name</label>
+          <input type="text" id="smtp_from_name" name="smtp_from_name" class="form-control" placeholder="Hausmeister Ticket-System" value="<%= smtpConfig.from_name || '' %>">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+          <input type="checkbox" name="smtp_secure" <%= smtpConfig.secure ? 'checked' : '' %>>
+          SSL/TLS Verschlüsselung erzwingen (Standard bei Port 465)
+        </label>
+      </div>
+
+      <div style="margin-top: 2rem; display: flex; justify-content: space-between; gap: 1rem; align-items: center;">
+        <button type="submit" class="btn btn-primary">
+          Einstellungen speichern
+        </button>
+      </div>
+    </form>
+
+    <div style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <strong>E-Mail-Konfiguration testen</strong>
+        <div style="font-size: 0.85rem; color: var(--text-muted);">Sendet eine Test-E-Mail an <%= adminEmail %>.</div>
+      </div>
+      <form action="/admin/test-email" method="POST" style="margin: 0;">
+        <button type="submit" class="btn btn-secondary">
+          Test-E-Mail senden
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

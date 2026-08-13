@@ -1,0 +1,1109 @@
+You are acting as both **software architect and senior full-stack developer**.
+
+Build a complete, production-ready web application for a **school caretaker / facility management ticket system**.
+
+The application will be used in a school so that teachers, staff members, and other authorized people can quickly submit maintenance requests to the school caretakers ("Hausmeister").
+
+The application should deliberately remain **simple for users**, but technically clean, secure, maintainable, and easy to extend later.
+
+## 1. General technical requirements
+
+The following technical constraints are mandatory:
+
+* Backend: **Node.js**
+* Database: **SQLite**
+* The application must run on a **Linux server**
+* The application must be suitable for permanent operation using **PM2**
+* Use a modern, stable Node.js stack of your choice.
+* You may freely choose appropriate libraries, frameworks, project structure, templating technology, middleware, security libraries, mail library, session implementation, database abstraction, migration strategy, etc.
+* Do **not** overengineer the application.
+* Prefer a robust and understandable architecture suitable for a relatively small school application.
+* The application should be maintainable by someone with normal web-development knowledge.
+* Avoid unnecessary external cloud dependencies.
+* The application should be able to run completely self-hosted.
+* SQLite data, uploaded files, configuration, and other persistent data must survive application restarts and PM2 restarts.
+
+You are explicitly responsible for making sensible technical and architectural decisions yourself.
+
+Do not wait for me to specify database tables, routes, folder structure, libraries, or exact implementation details. Design these yourself according to good software-engineering practices.
+
+Before implementation, briefly analyze the requirements and create an implementation plan. Then build the application.
+
+## 2. Language
+
+Although this specification is written in English, the **entire user-facing application must be German**.
+
+This includes:
+
+* navigation
+* labels
+* buttons
+* forms
+* validation messages
+* login pages
+* setup wizard
+* status names
+* email messages
+* system notifications
+* password-reset emails
+* error pages
+* administration pages
+
+Code, comments, variable names, database names, and technical documentation may be written in English.
+
+## 3. Basic structure
+
+The application has three main areas:
+
+1. **Public ticket submission frontend**
+2. **Password-protected caretaker area**
+3. **Password-protected administrator area**
+
+The caretaker area and administrator area are deliberately **not based on individual user accounts**.
+
+There is:
+
+* one shared caretaker password
+* one shared administrator password
+
+Do not introduce individual user accounts, roles, or a user-management system unless technically unavoidable.
+
+Caretaker employees themselves are only entities used for assigning tickets. They do not need individual login accounts.
+
+## 4. Public frontend
+
+The root page of the application should immediately display the ticket form.
+
+There must **not** be a separate landing page requiring the visitor to first click "Ticket erstellen".
+
+When someone opens the website, the ticket form should be immediately visible and usable.
+
+The page should look modern, friendly, professional, and appropriate for a school.
+
+It must work well on:
+
+* smartphones
+* tablets
+* desktop computers
+
+At the bottom or another sensible unobtrusive location, provide links to:
+
+* **Hausmeister-Login**
+* **Administrator-Login**
+
+These links should allow authorized users to reach the corresponding backend directly from the public frontend.
+
+## 5. Public ticket form
+
+The ticket form should include at least:
+
+* Name
+* E-mail address
+* Category
+* Location
+* Description of the problem
+
+You may improve the form with additional sensible fields or UX elements if useful, but keep it uncomplicated.
+
+An optional image/file upload may be added if you consider it appropriate.
+
+### Name
+
+Required.
+
+### E-mail address
+
+Required.
+
+Validate the address.
+
+The address will later be used for automatic ticket notifications.
+
+### Category
+
+Required.
+
+The available categories must come dynamically from the categories maintained in the caretaker area.
+
+Example categories could initially include things such as:
+
+* Elektro
+* Sanitär
+* Heizung
+* Möbel
+* Gebäude
+* Reinigung
+* Außenbereich
+* Sonstiges
+
+These are examples only. Categories must not be permanently hard-coded because caretakers need to manage them themselves.
+
+### Location
+
+Required.
+
+This should allow the person to specify where the problem exists.
+
+Examples:
+
+* Raum 204
+* Lehrerzimmer
+* Sporthalle
+* Schulhof
+* Gebäude A, 1. OG
+
+Decide yourself whether a simple text field, structured fields, suggestions, or another user-friendly solution works best.
+
+### Description
+
+Required.
+
+Provide enough space to describe the problem.
+
+The form should clearly communicate that the person should describe what is wrong and, where helpful, what exactly needs to be done.
+
+## 6. Ticket creation
+
+When the public form is submitted:
+
+* validate all inputs
+* protect against malicious input
+* create the ticket in SQLite
+* assign a unique ticket identifier
+* save the creation date/time
+* initially mark it with an appropriate status such as "Offen"
+* show the user a clear confirmation page/message
+
+The public user should not need an account.
+
+## 7. Ticket number
+
+Every ticket must receive a human-readable ticket number or identifier.
+
+Choose a sensible format.
+
+It should make it easy to refer to a ticket in emails or conversations.
+
+For example:
+
+`#2026-0042`
+
+This is only an example. Choose an appropriate implementation.
+
+## 8. Ticket status
+
+Design a simple useful ticket workflow.
+
+At minimum tickets need:
+
+* open / newly created
+* in progress
+* completed / closed
+
+Use appropriate German terms in the interface.
+
+You may introduce another status if it materially improves usability, but avoid unnecessary complexity.
+
+The current status must be clearly visible in the ticket list and ticket detail page.
+
+## 9. Caretaker login
+
+Create a dedicated caretaker login page.
+
+Authentication is done using the **shared caretaker password**.
+
+Do not require a username.
+
+The login page should therefore primarily contain:
+
+* password field
+* login button
+* "Passwort vergessen?" link
+
+Implement secure server-side session handling.
+
+Do not store the password as plaintext.
+
+Use a suitable secure password hashing algorithm.
+
+The caretaker area must not be accessible without authentication.
+
+## 10. Caretaker dashboard
+
+After login, caretakers see a clear dashboard containing all submitted tickets.
+
+The central element should be a ticket table/list.
+
+It should at minimum show useful information such as:
+
+* ticket number
+* creation date
+* category
+* location
+* short description / subject
+* status
+* assigned employee
+
+Allow sensible sorting and filtering.
+
+Useful filters might include:
+
+* status
+* category
+* employee
+* creation date
+* unassigned tickets
+
+A search function would also be useful.
+
+The table should remain understandable and usable even when many tickets exist.
+
+## 11. Assignment directly from ticket overview
+
+One particularly important requirement:
+
+Caretakers should be able to assign a ticket to an employee **directly from the ticket table**, without necessarily opening the ticket first.
+
+For example, the employee column could contain a dropdown.
+
+Changes should be saved clearly and reliably.
+
+The UX should make it obvious when an assignment has successfully changed.
+
+## 12. Employee management
+
+Caretakers need to maintain the employee list themselves.
+
+Create a management area within the caretaker backend.
+
+They should be able to:
+
+* add employee
+* edit employee
+* remove or deactivate employee
+
+At minimum an employee needs a name.
+
+You may add additional sensible fields where useful, but avoid unnecessary complexity.
+
+Deleting an employee must not corrupt old ticket history.
+
+Choose a suitable strategy, for example soft deletion/deactivation where appropriate.
+
+The employee list is used for ticket assignment.
+
+These employees do **not** receive individual application logins.
+
+## 13. Category management
+
+Caretakers also need to maintain ticket categories themselves.
+
+Within the caretaker backend they should be able to:
+
+* add category
+* edit category
+* remove or deactivate category
+
+Existing tickets must remain valid if an old category is later removed or disabled.
+
+Categories should support a sensible display order if useful.
+
+## 14. Ticket detail page
+
+Opening a ticket should show a detailed ticket view.
+
+Display at least:
+
+* ticket number
+* submission date/time
+* submitter name
+* submitter email address
+* category
+* location
+* complete description
+* status
+* assigned employee
+* uploaded attachments, if implemented
+
+Caretakers should be able to modify:
+
+* status
+* employee assignment
+
+## 15. Internal comments
+
+Each ticket needs an internal comment/note section.
+
+Caretakers can add internal comments.
+
+These comments are for internal staff use only and must **never be shown to the person who submitted the ticket**.
+
+Each comment should contain at least:
+
+* comment text
+* creation timestamp
+
+Since the caretaker area deliberately has a shared password and no individual user accounts, do not pretend to know which logged-in person wrote the comment.
+
+If useful, you may optionally allow the caretaker to manually enter initials/name when creating a comment, but this should not turn into an account system.
+
+## 16. Ticket history
+
+Maintain a useful history of relevant ticket changes.
+
+Examples:
+
+* ticket created
+* status changed
+* employee assigned
+* employee assignment changed
+* ticket closed
+* reopened, if reopening is supported
+
+The goal is to make important changes understandable later.
+
+Do not overcomplicate this into a full enterprise audit system.
+
+## 17. Closing a ticket
+
+Caretakers need an obvious action to mark a ticket as completed/closed.
+
+When a ticket is closed:
+
+* save the closing timestamp
+* update the ticket status
+* show the changed state in the dashboard
+* automatically send an email to the original submitter
+
+The email should inform the person that the issue has been completed.
+
+Include useful ticket information such as:
+
+* ticket number
+* category
+* location
+* possibly a short description
+
+Use professional and friendly German wording.
+
+## 18. Emails when a ticket is created
+
+After a ticket is successfully submitted, automatically send:
+
+### Email to submitter
+
+The submitter receives a confirmation that the request was successfully recorded.
+
+Include:
+
+* ticket number
+* date
+* category
+* location
+* submitted description or a useful summary
+* statement that the caretakers will process the request
+
+### Email to caretaker address
+
+A configurable central caretaker email address receives a notification about the new ticket.
+
+Include relevant ticket information and, where practical, a direct link into the ticket system.
+
+Do not expose sensitive authentication information in emails.
+
+## 19. Administrator area
+
+Create a separate administrator backend.
+
+It has:
+
+* its own login page
+* its own shared administrator password
+
+This password must be separate from the caretaker password.
+
+No username is required.
+
+The administrator area is intended mainly for system configuration rather than day-to-day ticket processing.
+
+## 20. Administrator settings
+
+The administrator should be able to configure at least:
+
+### General application settings
+
+* school name
+* optional system/site name
+* optional logo
+* caretaker contact email address
+* administrator contact email address
+
+The school name should be used dynamically in appropriate places such as page titles and outgoing emails.
+
+### Email / SMTP settings
+
+Provide configuration for the outgoing email account.
+
+The administrator should be able to enter the required SMTP parameters, for example:
+
+* SMTP server / host
+* port
+* encryption/security mode
+* username
+* password
+* sender email
+* sender name
+
+Choose a clean implementation based on the mail library you select.
+
+Sensitive values must be stored responsibly.
+
+Do not expose SMTP credentials in frontend HTML or logs.
+
+Provide a **"Test-E-Mail senden"** function so the administrator can verify that the mail configuration works.
+
+Give understandable German success/error feedback.
+
+## 21. Password management
+
+Both protected areas need their own password management.
+
+### Caretaker password
+
+After logging into the caretaker area, provide a page/action for changing the caretaker password.
+
+Require:
+
+* current password
+* new password
+* repeated new password
+
+### Administrator password
+
+Provide the same functionality in the administrator area.
+
+Passwords must be securely hashed.
+
+Never store the original passwords.
+
+Use reasonable password requirements without making the system unnecessarily frustrating.
+
+## 22. Forgotten password – caretaker
+
+The caretaker login page must have:
+
+**"Passwort vergessen?"**
+
+When used, the application should send a secure password-reset link to the caretaker email address stored in the system settings.
+
+Implement a standard secure reset flow.
+
+Requirements:
+
+* random cryptographically secure reset token
+* limited validity
+* token usable only for the intended password reset
+* token becomes invalid after successful use
+* old/expired tokens cannot reset passwords
+* do not leak passwords by email
+
+The recipient follows the link and can choose a new caretaker password.
+
+## 23. Forgotten password – administrator
+
+The administrator login page also needs:
+
+**"Passwort vergessen?"**
+
+The reset link must be sent to the configured administrator email address.
+
+Use the same secure principles as for caretaker password resets.
+
+The administrator and caretaker reset processes must remain logically separate.
+
+## 24. Important recovery considerations
+
+Design the password-reset functionality carefully.
+
+Avoid creating a situation where the administrator can permanently lock themselves out merely because SMTP configuration is currently broken.
+
+Provide a sensible documented recovery procedure for the Linux server administrator if necessary.
+
+The normal user-facing process should remain the email reset flow.
+
+## 25. First-run installation / setup wizard
+
+A very important requirement:
+
+When the application is started for the first time and the database does not yet contain the required setup/password information, the application must enter an **initial setup mode**.
+
+The normal application must not become fully available until the required initial configuration has been completed.
+
+Create a browser-based installation/setup wizard in German.
+
+The wizard should guide the administrator through initial setup.
+
+At minimum it must allow setting:
+
+* school name
+* administrator email address
+* caretaker email address
+* initial administrator password
+* confirmation of administrator password
+* initial caretaker password
+* confirmation of caretaker password
+
+It should also configure the necessary database structures automatically.
+
+You may decide whether SMTP is mandatory during the setup wizard or whether it can be configured immediately afterward in the administrator area.
+
+A useful approach could be to offer SMTP configuration during setup but allow it to be skipped with a clear warning that email functions will not work until configured.
+
+Make the setup process straightforward for someone installing the application on a Linux server.
+
+## 26. Setup security
+
+The setup wizard must only be available when the application has not yet been initialized.
+
+Once installation is complete:
+
+* the setup wizard must no longer be publicly accessible
+* simply knowing the setup URL must not allow someone to overwrite passwords or reset the installation
+* initialization state must be determined securely
+
+Provide a documented command-line/server recovery option if the application ever needs to be deliberately reinitialized.
+
+Do not create an insecure hidden URL that resets the whole application.
+
+## 27. Initial data
+
+After first setup, create some sensible starter data where appropriate.
+
+For example, some initial ticket categories may be added automatically.
+
+However, all these categories must later remain editable by the caretakers.
+
+Do not require manual database editing for normal configuration.
+
+## 28. Security
+
+Treat security as an important part of the implementation because the application is reachable by many people in a school.
+
+Implement appropriate protections, including where relevant:
+
+* secure password hashing
+* secure session handling
+* HTTP-only cookies
+* Secure cookie support for HTTPS production deployment
+* SameSite cookie settings
+* CSRF protection
+* XSS prevention / safe output encoding
+* SQL injection prevention
+* input validation
+* upload validation, if uploads exist
+* rate limiting for login attempts
+* rate limiting for password-reset requests
+* sensible rate limiting / spam protection for public ticket creation
+* protection against brute-force attacks
+* secure reset tokens
+* appropriate security headers
+* no passwords or secrets in logs
+* no plaintext passwords in SQLite
+* safe error handling
+* no stack traces exposed to public users in production
+
+Do not add captchas or external services by default unless truly necessary.
+
+If abuse prevention is needed, prefer self-contained measures initially.
+
+## 29. Privacy / school environment
+
+Design the application with reasonable data minimization in mind.
+
+Only collect data needed for processing the maintenance request.
+
+Do not add analytics, trackers, advertising, third-party fonts, or unrelated external services.
+
+Prefer local/static assets where practical.
+
+## 30. User experience
+
+The application should have a polished but simple interface.
+
+Avoid an overly technical or enterprise-style design.
+
+The public form should feel especially simple.
+
+Users should immediately understand:
+
+1. where to enter their information
+2. how to describe the problem
+3. how to submit the ticket
+4. whether submission succeeded
+
+The caretaker dashboard should prioritize speed and clarity.
+
+Use:
+
+* clear status badges
+* understandable tables
+* readable typography
+* sensible spacing
+* clear success/error notifications
+* confirmation dialogs only where they add value
+
+Responsive behavior is mandatory.
+
+## 31. Navigation
+
+### Public frontend
+
+Provide access to:
+
+* ticket form
+* Hausmeister-Login
+* Administrator-Login
+
+### Caretaker area
+
+Provide sensible navigation to:
+
+* ticket overview
+* category management
+* employee management
+* password change
+* logout
+
+### Administrator area
+
+Provide sensible navigation to:
+
+* general settings
+* SMTP/email settings
+* password change
+* logout
+
+You may organize the navigation differently if you have a better UX solution.
+
+## 32. Logout
+
+Both caretaker and administrator areas need a clear logout function.
+
+Logging out must invalidate the relevant authenticated session.
+
+## 33. Error handling
+
+Create user-friendly German error pages/messages.
+
+Examples:
+
+* invalid login
+* invalid password-reset link
+* expired password-reset link
+* ticket could not be created
+* email could not be sent
+* database error
+* invalid form data
+
+Where appropriate, distinguish between:
+
+* ticket successfully stored but email delivery failed
+* ticket itself could not be stored
+
+A mail failure must not silently cause a successfully created ticket to disappear.
+
+## 34. Email reliability
+
+Design email sending sensibly.
+
+If an email cannot be sent:
+
+* the ticket should still exist if it was successfully saved
+* log the failure without logging credentials or sensitive secrets
+* show appropriate feedback to administrators where relevant
+
+Use sensible timeouts and error handling.
+
+A simple application-level approach is fine; a complicated distributed queue system is not required unless you consider it justified.
+
+## 35. Database
+
+Use SQLite as required.
+
+You are responsible for designing the schema.
+
+The database should appropriately represent:
+
+* application setup
+* tickets
+* categories
+* employees
+* internal comments
+* history/events
+* authentication data
+* password-reset tokens
+* configurable settings
+* any other data needed by your design
+
+Do not ask me to design the database.
+
+Use proper relations, constraints, indexes, timestamps, and migrations where appropriate.
+
+Think specifically about long-term integrity when categories or employees are later changed or deactivated.
+
+## 36. Persistence
+
+Clearly define where persistent application data is stored on Linux.
+
+This may include:
+
+* SQLite database
+* uploaded logos
+* ticket attachments
+* configuration
+* other persistent application data
+
+Make the location easy to back up.
+
+Do not put important persistent data in temporary directories.
+
+## 37. Backups
+
+Provide a simple recommended backup procedure in the documentation.
+
+Because SQLite is used, explain how to safely back up:
+
+* the database
+* uploaded files
+* relevant configuration
+
+Also explain briefly how to restore the application.
+
+Do not build an unnecessarily complicated backup platform into the application itself unless there is a strong reason.
+
+## 38. Logging
+
+Implement useful server-side logging.
+
+Log relevant events such as:
+
+* application startup
+* errors
+* failed email delivery
+* important administrative problems
+
+Do not log:
+
+* plaintext passwords
+* reset tokens
+* SMTP passwords
+* session secrets
+* unnecessary personal data
+
+Make logs suitable for use with PM2.
+
+## 39. Environment configuration
+
+Use a sensible production configuration approach.
+
+Secrets that should not be stored casually in source control should use an appropriate mechanism such as environment variables or a secure configuration file.
+
+Provide an example configuration file such as `.env.example` if appropriate.
+
+Do not include real credentials.
+
+## 40. Linux deployment
+
+The finished application must include clear instructions for deployment on a Linux server.
+
+Assume a typical modern Debian/Ubuntu-style environment unless there is a strong reason to do otherwise.
+
+Document at least:
+
+* required Node.js version
+* how to install dependencies
+* how to initialize/start the application
+* how the setup wizard works
+* where SQLite is stored
+* how to configure environment variables
+* how to start the application manually
+* how to run it with PM2
+* how to make PM2 start automatically after server reboot
+* how to view logs
+* how to restart the application
+* how to update the application
+* how to back up the application
+
+Provide actual commands where helpful.
+
+## 41. PM2
+
+Provide a proper PM2 production setup.
+
+If useful, create an `ecosystem.config.js` or equivalent PM2 configuration.
+
+Ensure:
+
+* only one application instance accesses the SQLite database unless you have deliberately designed for otherwise
+* restart behavior is sensible
+* log handling is documented
+* application startup after reboot is documented
+
+Take SQLite limitations into account.
+
+## 42. Reverse proxy / HTTPS
+
+The Node.js application will likely run behind a reverse proxy.
+
+Design it accordingly.
+
+Provide an example deployment configuration for a common Linux reverse proxy such as Nginx.
+
+Include recommendations for HTTPS.
+
+Do not hard-code a specific public domain.
+
+The application should support configuration of its public base URL because password-reset emails need absolute URLs.
+
+## 43. Production behavior
+
+Support development and production modes.
+
+In production:
+
+* do not expose debug information
+* use secure session/cookie behavior
+* handle proxy headers correctly when behind a reverse proxy
+* apply appropriate security settings
+
+## 44. Code quality
+
+Generate a real project, not a demonstration snippet.
+
+The code should be:
+
+* modular
+* readable
+* consistently structured
+* maintainable
+* reasonably documented
+* free from obvious duplication
+* easy to extend
+
+Avoid putting the entire application in one enormous JavaScript file.
+
+At the same time, do not split the project into dozens of unnecessary micro-modules.
+
+Choose a balanced structure.
+
+## 45. Validation
+
+Implement both:
+
+* client-side validation for user experience
+* authoritative server-side validation for security
+
+Never rely only on browser validation.
+
+## 46. Accessibility
+
+Use reasonably accessible HTML.
+
+Include:
+
+* labels associated with inputs
+* keyboard usability
+* sensible focus states
+* readable contrast
+* semantic elements
+* meaningful button text
+* useful validation feedback
+
+## 47. Optional enhancements
+
+You may independently implement small enhancements if they clearly improve the system without changing its simple character.
+
+Potential examples:
+
+* dashboard counters for open tickets
+* visual status indicators
+* quick filters
+* automatic timestamps
+* CSV export
+* ticket printing
+* simple ticket archive
+* reopening closed tickets
+* optional attachment upload
+* configurable school logo
+* automatic cleanup of expired reset tokens
+* pagination
+* simple dashboard statistics
+
+However:
+
+**Do not allow optional features to delay or destabilize the core requirements.**
+
+Prioritize the required ticket workflow first.
+
+## 48. Do not introduce these concepts unnecessarily
+
+Do not turn this into a large enterprise helpdesk.
+
+Avoid unnecessary:
+
+* individual caretaker accounts
+* role-based access-control systems
+* customer accounts
+* customer portals
+* departments
+* SLA systems
+* billing
+* chat systems
+* complex notification workflows
+* external SaaS dependencies
+* microservices
+* Docker/Kubernetes requirements
+* Redis
+* separate database servers
+
+Unless there is an exceptional technical reason, the target architecture should remain a **single self-hosted Node.js application with SQLite**.
+
+## 49. Expected project deliverables
+
+Create the complete project.
+
+At minimum provide:
+
+* complete application source code
+* frontend
+* caretaker backend
+* administrator backend
+* SQLite initialization/migration logic
+* first-run setup wizard
+* authentication
+* password reset system
+* password change functions
+* email functionality
+* ticket creation
+* ticket management
+* employee management
+* category management
+* internal comments
+* status handling
+* ticket history
+* configuration
+* PM2 setup
+* deployment documentation
+* `.env.example` or equivalent
+* README
+* Linux installation instructions
+* backup/restore instructions
+
+If static files or templates are required, create those as well.
+
+Do not leave critical components as placeholders or TODOs.
+
+## 50. Testing
+
+Test the important workflows.
+
+At minimum verify:
+
+1. brand-new application starts in setup mode
+2. setup wizard initializes the application
+3. setup cannot simply be opened again afterward
+4. public ticket can be created
+5. ticket appears in caretaker dashboard
+6. confirmation email is attempted/sent correctly
+7. caretaker notification is attempted/sent correctly
+8. caretaker authentication works
+9. administrator authentication works
+10. incorrect passwords are rejected
+11. categories can be added/edited/deactivated
+12. employees can be added/edited/deactivated
+13. employee can be assigned directly from ticket overview
+14. ticket can be opened
+15. internal comment can be created
+16. ticket status can be changed
+17. ticket can be closed
+18. closing notification is sent to submitter
+19. caretaker password can be changed
+20. administrator password can be changed
+21. caretaker password-reset request works
+22. administrator password-reset request works
+23. expired reset links fail safely
+24. previously used reset links fail safely
+25. unauthenticated users cannot access protected routes
+26. application still works after restart
+27. application runs correctly under PM2
+
+Add automated tests for important server-side functionality where reasonable.
+
+## 51. Implementation approach
+
+Work autonomously.
+
+Start by reviewing this specification and deciding on an appropriate architecture.
+
+Then:
+
+1. create the project structure
+2. design the database
+3. implement initialization/migrations
+4. implement authentication/session handling
+5. implement first-run setup
+6. implement the public ticket workflow
+7. implement caretaker functionality
+8. implement administration/settings
+9. implement email notifications
+10. implement password reset
+11. add validation and security protections
+12. improve responsive UI/UX
+13. test the application
+14. fix issues you discover
+15. create deployment documentation
+
+Do not stop after generating an initial scaffold.
+
+Continue until the core application is actually functional.
+
+Whenever you encounter a technical design decision not specified here, make a sensible decision yourself and continue rather than waiting for me.
+
+## 52. Acceptance criteria
+
+The project is considered complete when I can do the following on a Linux server:
+
+* clone/copy the project
+* install dependencies
+* configure basic runtime environment
+* start it
+* open it in a browser
+* automatically receive the setup wizard on first installation
+* configure school information, email addresses and both passwords
+* finish setup
+* open the public homepage
+* immediately see the ticket form
+* create a ticket
+* receive a confirmation email
+* have the caretaker notification email sent
+* follow the visible link to the caretaker login
+* log in using the shared caretaker password
+* view and manage tickets
+* assign tickets to maintained employees
+* create internal comments
+* maintain categories
+* maintain employees
+* close a ticket
+* have the submitter receive the completion email
+* change the caretaker password
+* reset the caretaker password by email
+* log in separately as administrator
+* configure SMTP and system settings
+* send a test email
+* change the administrator password
+* reset the administrator password by email
+* run the application continuously using PM2
+
+The finished result should feel like a small, polished, reliable internal school application rather than a coding prototype.
+
+Before considering the task finished, perform a final review against every mandatory requirement in this specification and correct any missing or incomplete functionality.

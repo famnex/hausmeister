@@ -1,0 +1,69 @@
+<div style="max-width: 680px; margin: 0 auto;">
+  <% if (typeof setupSuccess !== 'undefined' && setupSuccess) { %>
+    <div class="alert alert-success">
+      <strong>Erstinstallation erfolgreich abgeschlossen!</strong> Das System ist nun einsatzbereit.
+    </div>
+  <% } %>
+
+  <div class="card">
+    <h1 style="color: var(--primary); font-size: 1.5rem; margin-bottom: 0.5rem; font-weight: 700;">
+      Schadensmeldung / Reparaturanfrage
+    </h1>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">
+      Hier kannst du schnell und unkompliziert ein technisches Problem oder einen Reparaturwunsch an das Hausmeister-Team der <strong><%= schoolName %></strong> melden.
+    </p>
+
+    <% if (error) { %>
+      <div class="alert alert-danger"><%= error %></div>
+    <% } %>
+
+    <form action="/ticket" method="POST" enctype="multipart/form-data">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="submitter_name">Dein Name *</label>
+          <input type="text" id="submitter_name" name="submitter_name" class="form-control" required placeholder="z. B. Maria Muster (Lehrerin)" value="<%= formData.submitter_name || '' %>">
+        </div>
+
+        <div class="form-group">
+          <label for="submitter_email">Deine E-Mail-Adresse *</label>
+          <input type="email" id="submitter_email" name="submitter_email" class="form-control" required placeholder="name@schule.de" value="<%= formData.submitter_email || '' %>">
+          <div class="help-text">Wird für Rückfragen & Statusbestätigungen genutzt.</div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="category_id">Kategorie *</label>
+          <select id="category_id" name="category_id" class="form-control" required>
+            <option value="">-- Bitte wählen --</option>
+            <% categories.forEach(cat => { %>
+              <option value="<%= cat.id %>" <%= formData.category_id == cat.id ? 'selected' : '' %>><%= cat.name %></option>
+            <% }); %>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="location">Ort / Raum / Gebäude *</label>
+          <input type="text" id="location" name="location" class="form-control" required placeholder="z. B. Raum 204, Sporthalle, Lehrerzimmer" value="<%= formData.location || '' %>">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Beschreibung des Problems *</label>
+        <textarea id="description" name="description" class="form-control" required placeholder="Bitte beschreibe möglichst genau, was defekt ist oder was erledigt werden muss..."><%= formData.description || '' %></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="attachments">Foto / Dateianhang (optional)</label>
+        <input type="file" id="attachments" name="attachments" class="form-control" accept="image/*,.pdf" multiple>
+        <div class="help-text">Maximal 3 Dateien (Bilder oder PDF, max. 10 MB je Datei).</div>
+      </div>
+
+      <div style="margin-top: 1.5rem; text-align: right;">
+        <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem; font-size: 1rem;">
+          Meldung jetzt absenden &rarr;
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

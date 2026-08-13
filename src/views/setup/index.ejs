@@ -1,0 +1,102 @@
+<div style="max-width: 700px; margin: 0 auto;">
+  <div class="card">
+    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+      <span style="background: var(--primary-light); color: var(--primary); padding: 0.35rem 0.75rem; border-radius: var(--radius); font-weight: 700;">1. Start</span>
+      <h1 style="color: var(--primary); font-size: 1.5rem; font-weight: 700; margin: 0;">Erstinstallation & Einrichtung</h1>
+    </div>
+
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+      Willkommen beim Hausmeister Ticket-System. Da die Anwendung zum ersten Mal gestartet wurde, richte bitte die grundlegenden Schuldaten und Zugangs-Passwörter ein.
+    </p>
+
+    <% if (error) { %>
+      <div class="alert alert-danger"><%= error %></div>
+    <% } %>
+
+    <form action="/setup" method="POST">
+      <h2 style="font-size: 1.1rem; color: var(--primary); margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+        1. Schul- & Kontaktdaten
+      </h2>
+
+      <div class="form-group">
+        <label for="school_name">Name der Schule *</label>
+        <input type="text" id="school_name" name="school_name" class="form-control" required placeholder="z. B. Goethe-Gymnasium Musterstadt" value="<%= formData.school_name || '' %>">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="caretaker_email">Hausmeister E-Mail-Adresse *</label>
+          <input type="email" id="caretaker_email" name="caretaker_email" class="form-control" required placeholder="hausmeister@schule.de" value="<%= formData.caretaker_email || '' %>">
+          <div class="help-text">Erhält Benachrichtigungen bei neuen Tickets.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="admin_email">Administrator E-Mail-Adresse *</label>
+          <input type="email" id="admin_email" name="admin_email" class="form-control" required placeholder="admin@schule.de" value="<%= formData.admin_email || '' %>">
+          <div class="help-text">Für System- und Passwort-Reset Benachrichtigungen.</div>
+        </div>
+      </div>
+
+      <h2 style="font-size: 1.1rem; color: var(--primary); margin-top: 1.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+        2. Gemeinsame Zugangspasswörter
+      </h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="caretaker_password">Hausmeister-Passwort *</label>
+          <input type="password" id="caretaker_password" name="caretaker_password" class="form-control" required placeholder="Mind. 6 Zeichen">
+        </div>
+        <div class="form-group">
+          <label for="caretaker_password_confirm">Hausmeister-Passwort (Wdh.) *</label>
+          <input type="password" id="caretaker_password_confirm" name="caretaker_password_confirm" class="form-control" required placeholder="Passwort wiederholen">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="admin_password">Administrator-Passwort *</label>
+          <input type="password" id="admin_password" name="admin_password" class="form-control" required placeholder="Mind. 6 Zeichen">
+        </div>
+        <div class="form-group">
+          <label for="admin_password_confirm">Administrator-Passwort (Wdh.) *</label>
+          <input type="password" id="admin_password_confirm" name="admin_password_confirm" class="form-control" required placeholder="Passwort wiederholen">
+        </div>
+      </div>
+
+      <h2 style="font-size: 1.1rem; color: var(--primary); margin-top: 1.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+        3. SMTP-E-Mail Konfiguration (Optional)
+      </h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+        Kann auch später jederzeit im Administrator-Bereich eingerichtet werden.
+      </p>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="smtp_host">SMTP Server / Host</label>
+          <input type="text" id="smtp_host" name="smtp_host" class="form-control" placeholder="z. B. smtp.schule.de" value="<%= formData.smtp_host || '' %>">
+        </div>
+        <div class="form-group">
+          <label for="smtp_port">Port</label>
+          <input type="number" id="smtp_port" name="smtp_port" class="form-control" placeholder="587 oder 465" value="<%= formData.smtp_port || '587' %>">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="smtp_user">SMTP Benutzername</label>
+          <input type="text" id="smtp_user" name="smtp_user" class="form-control" placeholder="Benutzername" value="<%= formData.smtp_user || '' %>">
+        </div>
+        <div class="form-group">
+          <label for="smtp_pass">SMTP Passwort</label>
+          <input type="password" id="smtp_pass" name="smtp_pass" class="form-control" placeholder="Passwort">
+        </div>
+      </div>
+
+      <div style="margin-top: 2rem; text-align: right;">
+        <button type="submit" class="btn btn-success" style="padding: 0.75rem 2rem; font-size: 1rem;">
+          Einrichtung abschließen & System starten &rarr;
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

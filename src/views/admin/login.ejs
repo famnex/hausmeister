@@ -1,0 +1,37 @@
+<div style="max-width: 450px; margin: 3rem auto;">
+  <div class="card">
+    <h1 style="color: var(--primary); font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; text-align: center;">
+      Administrator-Login
+    </h1>
+    <p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; margin-bottom: 1.5rem;">
+      Zugang für die Systemverwaltung der <%= schoolName %>
+    </p>
+
+    <% if (error) { %>
+      <div class="alert alert-danger"><%= error %></div>
+    <% } %>
+
+    <% if (successMessage) { %>
+      <div class="alert alert-success"><%= successMessage %></div>
+    <% } %>
+
+    <form action="/admin/login" method="POST">
+      <div class="form-group">
+        <label for="password">Gemeinsames Administrator-Passwort</label>
+        <input type="password" id="password" name="password" class="form-control" required autofocus placeholder="Passwort eingeben">
+      </div>
+
+      <div style="margin-top: 1.5rem;">
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          Anmelden &rarr;
+        </button>
+      </div>
+    </form>
+
+    <div style="margin-top: 1.5rem; text-align: center; font-size: 0.85rem;">
+      <a href="/auth/admin/passwort-vergessen" style="color: var(--text-muted); text-decoration: underline;">
+        Passwort vergessen?
+      </a>
+    </div>
+  </div>
+</div>

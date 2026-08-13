@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof pageTitle !== 'undefined' ? pageTitle + ' - ' : '' %><%= schoolName || 'Hausmeister Ticket-System' %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <a href="/" class="logo-brand">
+        <% if (typeof schoolLogo !== 'undefined' && schoolLogo) { %>
+          <img src="<%= schoolLogo %>" alt="<%= schoolName %> Logo">
+        <% } %>
+        <span><%= schoolName || 'Hausmeister-System' %></span>
+      </a>
+
+      <nav class="main-nav">
+        <% if (typeof currentRole !== 'undefined' && currentRole === 'caretaker') { %>
+          <a href="/hausmeister" class="nav-link">Tickets Overview</a>
+          <a href="/hausmeister/categories" class="nav-link">Kategorien</a>
+          <a href="/hausmeister/employees" class="nav-link">Mitarbeiter</a>
+          <a href="/hausmeister/passwort" class="nav-link">Passwort</a>
+          <a href="/hausmeister/logout" class="nav-link btn-logout">Abmelden</a>
+        <% } else if (typeof currentRole !== 'undefined' && currentRole === 'admin') { %>
+          <a href="/admin/einstellungen" class="nav-link">Einstellungen</a>
+          <a href="/admin/passwort" class="nav-link">Passwort</a>
+          <a href="/admin/logout" class="nav-link btn-logout">Abmelden</a>
+        <% } else { %>
+          <a href="/" class="nav-link">Schadensmeldung erstellen</a>
+          <a href="/hausmeister/login" class="nav-link">Hausmeister-Login</a>
+          <a href="/admin/login" class="nav-link">Administrator-Login</a>
+        <% } %>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <%- body %>
+  </main>
+
+  <footer>
+    <div class="footer-container">
+      <div>
+        &copy; <%= new Date().getFullYear() %> <%= schoolName || 'Schule' %> - Hausmeister Ticket-System
+      </div>
+      <div class="footer-links">
+        <a href="/">Meldung erstellen</a>
+        <span>|</span>
+        <a href="/hausmeister/login">Hausmeister-Bereich</a>
+        <span>|</span>
+        <a href="/admin/login">Admin-Bereich</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

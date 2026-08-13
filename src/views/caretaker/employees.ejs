@@ -1,0 +1,68 @@
+<div style="max-width: 800px; margin: 0 auto;">
+  <div style="margin-bottom: 1rem;">
+    <a href="/hausmeister" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem;">&larr; Zurück zum Dashboard</a>
+  </div>
+
+  <h1 style="color: var(--primary); font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">Hausmeister-Mitarbeiter verwalten</h1>
+
+  <% if (successMessage) { %>
+    <div class="alert alert-success"><%= successMessage %></div>
+  <% } %>
+
+  <div class="card">
+    <h3 class="card-title" style="font-size: 1.1rem;">Neuen Mitarbeiter hinzufügen</h3>
+    <form action="/hausmeister/employees/add" method="POST" class="form-row" style="align-items: flex-end;">
+      <div class="form-group" style="flex: 3; margin-bottom: 0;">
+        <label for="name">Vor- und Nachname *</label>
+        <input type="text" id="name" name="name" class="form-control" required placeholder="z. B. Herr Schmidt">
+      </div>
+      <button type="submit" class="btn btn-primary" style="height: 38px;">Mitarbeiter anlegen</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title" style="font-size: 1.1rem;">Mitarbeiterliste</h3>
+    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+      Mitarbeiter dienen der Ticket-Zuweisung. Deaktivierte Mitarbeiter bleiben in historischen Tickets bestehen.
+    </p>
+
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name des Mitarbeiters</th>
+            <th>Status</th>
+            <th style="text-align: right;">Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (employees.length === 0) { %>
+            <tr>
+              <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                Noch keine Mitarbeiter angelegt.
+              </td>
+            </tr>
+          <% } %>
+          <% employees.forEach(emp => { %>
+            <tr>
+              <form action="/hausmeister/employees/<%= emp.id %>/edit" method="POST">
+                <td>
+                  <input type="text" name="name" class="form-control" value="<%= emp.name %>" required style="padding: 0.35rem 0.5rem;">
+                </td>
+                <td>
+                  <label style="font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.35rem;">
+                    <input type="checkbox" name="is_active" <%= emp.is_active ? 'checked' : '' %>>
+                    Aktiv (für Zuweisung)
+                  </label>
+                </td>
+                <td style="text-align: right;">
+                  <button type="submit" class="btn btn-secondary btn-sm">Speichern</button>
+                </td>
+              </form>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
