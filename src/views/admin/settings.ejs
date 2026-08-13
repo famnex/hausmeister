@@ -14,7 +14,7 @@
       1. Allgemeine Schuleinstellungen
     </h2>
 
-    <form action="/admin/einstellungen" method="POST" enctype="multipart/form-data">
+    <form action="<%= url('/admin/einstellungen') %>" method="POST" enctype="multipart/form-data">
       <div class="form-group">
         <label for="school_name">Name der Schule *</label>
         <input type="text" id="school_name" name="school_name" class="form-control" required value="<%= schoolName %>">
@@ -38,7 +38,7 @@
         <label for="logo">Schullogo (optional)</label>
         <% if (schoolLogo) { %>
           <div style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 1rem;">
-            <img src="<%= schoolLogo %>" alt="Aktuelles Logo" style="max-height: 40px; border: 1px solid var(--border); padding: 2px; border-radius: 4px;">
+            <img src="<%= url(schoolLogo) %>" alt="Aktuelles Logo" style="max-height: 40px; border: 1px solid var(--border); padding: 2px; border-radius: 4px;">
             <span style="font-size: 0.85rem; color: var(--text-muted);">Aktuelles Logo vorhanden.</span>
           </div>
         <% } %>
@@ -101,7 +101,7 @@
         <strong>E-Mail-Konfiguration testen</strong>
         <div style="font-size: 0.85rem; color: var(--text-muted);">Sendet eine Test-E-Mail an <%= adminEmail %>.</div>
       </div>
-      <form action="/admin/test-email" method="POST" style="margin: 0;">
+      <form action="<%= url('/admin/test-email') %>" method="POST" style="margin: 0;">
         <button type="submit" class="btn btn-secondary">
           Test-E-Mail senden
         </button>

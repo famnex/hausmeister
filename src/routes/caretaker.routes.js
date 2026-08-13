@@ -12,7 +12,7 @@ router.get('/login', (req, res) => {
     return res.redirect('/hausmeister');
   }
   const schoolName = SettingsService.get('school_name', 'Schule');
-  res.render('caretaker/login', { schoolName, error: null, successMessage: null });
+  res.render('caretaker/login', { schoolName, error: null, successMessage: req.query.msg || null });
 });
 
 router.post('/login', async (req, res) => {
@@ -29,7 +29,6 @@ router.post('/login', async (req, res) => {
     req.session.authenticatedRole = 'caretaker';
     return res.redirect('/hausmeister');
   } else {
-    // Check if it's admin password allowing fallback
     const isAdmin = await AuthService.verifyRolePassword('admin', password);
     if (isAdmin) {
       req.session.authenticatedRole = 'admin';
@@ -39,7 +38,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Caretaker Dashboard
+// Caretaker Dashboard Root
 router.get('/', requireAuth('caretaker'), (req, res) => {
   const schoolName = SettingsService.get('school_name', 'Schule');
   const { status, category_id, employee_id, search } = req.query;
@@ -54,7 +53,6 @@ router.get('/', requireAuth('caretaker'), (req, res) => {
   const categories = TicketService.getAllCategories(true);
   const employees = TicketService.getAllEmployees(true);
 
-  // Statistics
   const allTickets = TicketService.getAllTickets();
   const stats = {
     open: allTickets.filter(t => t.status === 'offen').length,
@@ -130,7 +128,6 @@ router.post('/tickets/:id/update', requireAuth('caretaker'), async (req, res) =>
     if (status && status !== oldStatus) {
       TicketService.updateStatus(ticketId, status);
 
-      // Trigger email if closed
       if (status === 'abgeschlossen') {
         const updatedTicket = TicketService.getTicketById(ticketId);
         MailService.sendTicketClosedSubmitterNotification(updatedTicket);

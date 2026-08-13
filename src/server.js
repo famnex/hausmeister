@@ -19,6 +19,23 @@ const app = express();
 const PORT = process.env.PORT || 5585;
 const BASE_PATH = (process.env.BASE_PATH || '').replace(/\/$/, '');
 
+function buildUrl(pathStr, basePath = '') {
+  if (!pathStr) return basePath || '/';
+  if (pathStr.startsWith('http://') || pathStr.startsWith('https://')) return pathStr;
+
+  const cleanPath = pathStr.startsWith('/') ? pathStr : '/' + pathStr;
+  const cleanBase = basePath.replace(/\/$/, '');
+
+  if (cleanBase) {
+    if (cleanPath === cleanBase || cleanPath.startsWith(cleanBase + '/')) {
+      return cleanPath;
+    }
+    return cleanBase + cleanPath;
+  }
+
+  return cleanPath;
+}
+
 // Security & Headers Middleware
 app.use(helmet({
   contentSecurityPolicy: false,
@@ -80,6 +97,7 @@ appRouter.use((req, res, next) => {
   const currentBasePath = req.baseUrl || BASE_PATH || '';
 
   res.locals.basePath = currentBasePath;
+  res.locals.url = (p) => buildUrl(p, currentBasePath);
   res.locals.schoolName = SettingsService.get('school_name', 'Schule');
   res.locals.schoolLogo = SettingsService.get('school_logo', null);
   res.locals.currentRole = req.session ? req.session.authenticatedRole : null;
@@ -87,13 +105,11 @@ appRouter.use((req, res, next) => {
 
   // Intercept res.redirect to prefix basePath if relative to root
   const rawRedirect = res.redirect.bind(res);
-  res.redirect = function (url) {
-    if (typeof url === 'string' && url.startsWith('/') && !url.startsWith('//')) {
-      if (currentBasePath && !url.startsWith(currentBasePath)) {
-        return rawRedirect(currentBasePath + url);
-      }
+  res.redirect = function (urlTarget) {
+    if (typeof urlTarget === 'string') {
+      return rawRedirect(buildUrl(urlTarget, currentBasePath));
     }
-    return rawRedirect(url);
+    return rawRedirect(urlTarget);
   };
 
   next();

@@ -4,33 +4,33 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= typeof pageTitle !== 'undefined' ? pageTitle + ' - ' : '' %><%= schoolName || 'Hausmeister Ticket-System' %></title>
-  <link rel="stylesheet" href="<%= basePath %>/css/style.css">
+  <link rel="stylesheet" href="<%= url('/css/style.css') %>">
 </head>
 <body>
   <header>
     <div class="header-container">
-      <a href="<%= basePath %>/" class="logo-brand">
+      <a href="<%= url('/') %>" class="logo-brand">
         <% if (typeof schoolLogo !== 'undefined' && schoolLogo) { %>
-          <img src="<%= basePath %><%= schoolLogo %>" alt="<%= schoolName %> Logo">
+          <img src="<%= url(schoolLogo) %>" alt="<%= schoolName %> Logo">
         <% } %>
         <span><%= schoolName || 'Hausmeister-System' %></span>
       </a>
 
       <nav class="main-nav">
         <% if (typeof currentRole !== 'undefined' && currentRole === 'caretaker') { %>
-          <a href="<%= basePath %>/hausmeister" class="nav-link">Tickets Overview</a>
-          <a href="<%= basePath %>/hausmeister/categories" class="nav-link">Kategorien</a>
-          <a href="<%= basePath %>/hausmeister/employees" class="nav-link">Mitarbeiter</a>
-          <a href="<%= basePath %>/hausmeister/passwort" class="nav-link">Passwort</a>
-          <a href="<%= basePath %>/hausmeister/logout" class="nav-link btn-logout">Abmelden</a>
+          <a href="<%= url('/hausmeister') %>" class="nav-link">Tickets Overview</a>
+          <a href="<%= url('/hausmeister/categories') %>" class="nav-link">Kategorien</a>
+          <a href="<%= url('/hausmeister/employees') %>" class="nav-link">Mitarbeiter</a>
+          <a href="<%= url('/hausmeister/passwort') %>" class="nav-link">Passwort</a>
+          <a href="<%= url('/hausmeister/logout') %>" class="nav-link btn-logout">Abmelden</a>
         <% } else if (typeof currentRole !== 'undefined' && currentRole === 'admin') { %>
-          <a href="<%= basePath %>/admin/einstellungen" class="nav-link">Einstellungen</a>
-          <a href="<%= basePath %>/admin/passwort" class="nav-link">Passwort</a>
-          <a href="<%= basePath %>/admin/logout" class="nav-link btn-logout">Abmelden</a>
+          <a href="<%= url('/admin/einstellungen') %>" class="nav-link">Einstellungen</a>
+          <a href="<%= url('/admin/passwort') %>" class="nav-link">Passwort</a>
+          <a href="<%= url('/admin/logout') %>" class="nav-link btn-logout">Abmelden</a>
         <% } else { %>
-          <a href="<%= basePath %>/" class="nav-link">Schadensmeldung erstellen</a>
-          <a href="<%= basePath %>/hausmeister/login" class="nav-link">Hausmeister-Login</a>
-          <a href="<%= basePath %>/admin/login" class="nav-link">Administrator-Login</a>
+          <a href="<%= url('/') %>" class="nav-link">Schadensmeldung erstellen</a>
+          <a href="<%= url('/hausmeister/login') %>" class="nav-link">Hausmeister-Login</a>
+          <a href="<%= url('/admin/login') %>" class="nav-link">Administrator-Login</a>
         <% } %>
       </nav>
     </div>
@@ -46,11 +46,11 @@
         &copy; <%= new Date().getFullYear() %> <%= schoolName || 'Schule' %> - Hausmeister Ticket-System
       </div>
       <div class="footer-links">
-        <a href="<%= basePath %>/">Meldung erstellen</a>
+        <a href="<%= url('/') %>">Meldung erstellen</a>
         <span>|</span>
-        <a href="<%= basePath %>/hausmeister/login">Hausmeister-Bereich</a>
+        <a href="<%= url('/hausmeister/login') %>">Hausmeister-Bereich</a>
         <span>|</span>
-        <a href="<%= basePath %>/admin/login">Admin-Bereich</a>
+        <a href="<%= url('/admin/login') %>">Admin-Bereich</a>
       </div>
     </div>
   </footer>

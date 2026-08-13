@@ -1,6 +1,6 @@
 <div style="max-width: 900px; margin: 0 auto;">
   <div style="margin-bottom: 1rem;">
-    <a href="/hausmeister" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem;">&larr; Zurück zur Übersicht</a>
+    <a href="<%= url('/hausmeister') %>" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem;">&larr; Zurück zur Übersicht</a>
   </div>
 
   <% if (successMessage) { %>
@@ -51,7 +51,7 @@
             <ul style="list-style: none; padding: 0;">
               <% ticket.attachments.forEach(att => { %>
                 <li style="margin-bottom: 0.5rem;">
-                  <a href="/uploads/<%= att.filename %>" target="_blank" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                  <a href="<%= url('/uploads/' + att.filename) %>" target="_blank" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.5rem;">
                     &#128206; <%= att.original_name %> (<%= (att.size_bytes / 1024).toFixed(1) %> KB)
                   </a>
                 </li>
@@ -68,7 +68,7 @@
           Diese Kommentare sind nur für das Hausmeister-Team sichtbar und werden <strong>niemals</strong> an den Meldenden gesendet.
         </p>
 
-        <form action="/hausmeister/tickets/<%= ticket.id %>/comment" method="POST" style="margin-bottom: 1.5rem;">
+        <form action="<%= url('/hausmeister/tickets/' + ticket.id + '/comment') %>" method="POST" style="margin-bottom: 1.5rem;">
           <div class="form-group">
             <input type="text" name="author_name" class="form-control" placeholder="Dein Kürzel / Name (optional)" style="margin-bottom: 0.5rem;">
             <textarea name="comment_text" class="form-control" required placeholder="Neuen internen Hinweis verfassen..." style="min-height: 80px;"></textarea>
@@ -98,7 +98,7 @@
       <div class="card">
         <h3 class="card-title" style="font-size: 1.1rem;">Ticket verwalten</h3>
 
-        <form action="/hausmeister/tickets/<%= ticket.id %>/update" method="POST">
+        <form action="<%= url('/hausmeister/tickets/' + ticket.id + '/update') %>" method="POST">
           <div class="form-group">
             <label for="status">Status ändern</label>
             <select id="status" name="status" class="form-control">

@@ -12,7 +12,7 @@ router.get('/login', (req, res) => {
     return res.redirect('/admin/einstellungen');
   }
   const schoolName = SettingsService.get('school_name', 'Schule');
-  res.render('admin/login', { schoolName, error: null, successMessage: null });
+  res.render('admin/login', { schoolName, error: null, successMessage: req.query.msg || null });
 });
 
 router.post('/login', async (req, res) => {
@@ -33,8 +33,8 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Admin Settings
-router.get('/einstellungen', requireAuth('admin'), (req, res) => {
+// Admin Root / Settings
+router.get(['/', '/einstellungen'], requireAuth('admin'), (req, res) => {
   const schoolName = SettingsService.get('school_name', 'Schule');
   const adminEmail = SettingsService.get('admin_email', '');
   const caretakerEmail = SettingsService.get('caretaker_email', '');
@@ -53,7 +53,7 @@ router.get('/einstellungen', requireAuth('admin'), (req, res) => {
   });
 });
 
-router.post('/einstellungen', requireAuth('admin'), upload.single('logo'), (req, res) => {
+router.post(['/', '/einstellungen'], requireAuth('admin'), upload.single('logo'), (req, res) => {
   const { school_name, admin_email, caretaker_email, smtp_host, smtp_port, smtp_user, smtp_pass, smtp_secure, smtp_from_email, smtp_from_name } = req.body;
 
   try {
@@ -66,7 +66,6 @@ router.post('/einstellungen', requireAuth('admin'), upload.single('logo'), (req,
       host: smtp_host ? smtp_host.trim() : '',
       port: smtp_port ? parseInt(smtp_port, 10) : 587,
       user: smtp_user ? smtp_user.trim() : '',
-      // Preserve old password if left blank in form
       pass: (smtp_pass && smtp_pass.trim().length > 0) ? smtp_pass.trim() : (currentSmtp.pass || ''),
       secure: smtp_secure === 'on' || smtp_secure === 'true',
       from_email: smtp_from_email ? smtp_from_email.trim() : admin_email.trim(),

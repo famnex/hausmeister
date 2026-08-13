@@ -5,8 +5,8 @@
       <p style="color: var(--text-muted); font-size: 0.9rem;">Alle Schadensmeldungen im Überblick</p>
     </div>
     <div style="display: flex; gap: 0.5rem;">
-      <a href="/hausmeister/categories" class="btn btn-secondary btn-sm">Kategorien verwalten</a>
-      <a href="/hausmeister/employees" class="btn btn-secondary btn-sm">Mitarbeiter verwalten</a>
+      <a href="<%= url('/hausmeister/categories') %>" class="btn btn-secondary btn-sm">Kategorien verwalten</a>
+      <a href="<%= url('/hausmeister/employees') %>" class="btn btn-secondary btn-sm">Mitarbeiter verwalten</a>
     </div>
   </div>
 
@@ -36,7 +36,7 @@
 
   <!-- Filter Bar -->
   <div class="filter-bar">
-    <form action="/hausmeister" method="GET" class="filter-form">
+    <form action="<%= url('/hausmeister') %>" method="GET" class="filter-form">
       <div class="filter-group">
         <label for="status">Status</label>
         <select id="status" name="status" class="form-control">
@@ -75,7 +75,7 @@
 
       <div>
         <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1rem;">Filtern</button>
-        <a href="/hausmeister" class="btn btn-secondary" style="padding: 0.65rem 1rem;">Zurücksetzen</a>
+        <a href="<%= url('/hausmeister') %>" class="btn btn-secondary" style="padding: 0.65rem 1rem;">Zurücksetzen</a>
       </div>
     </form>
   </div>
@@ -106,7 +106,7 @@
         <% tickets.forEach(t => { %>
           <tr>
             <td>
-              <a href="/hausmeister/tickets/<%= t.id %>" style="font-weight: 700; color: var(--primary); text-decoration: none;">
+              <a href="<%= url('/hausmeister/tickets/' + t.id) %>" style="font-weight: 700; color: var(--primary); text-decoration: none;">
                 <%= t.ticket_number %>
               </a>
             </td>
@@ -126,7 +126,7 @@
             </td>
             <td>
               <!-- Fast Inline Employee Assignment -->
-              <form action="/hausmeister/tickets/<%= t.id %>/assign-fast" method="POST" style="margin: 0;">
+              <form action="<%= url('/hausmeister/tickets/' + t.id + '/assign-fast') %>" method="POST" style="margin: 0;">
                 <select name="employee_id" onchange="this.form.submit()" class="form-control" style="font-size: 0.85rem; padding: 0.3rem 0.5rem; min-width: 140px;">
                   <option value="">-- Nicht zugewiesen --</option>
                   <% employees.forEach(emp => { %>
@@ -138,7 +138,7 @@
               </form>
             </td>
             <td style="text-align: right; white-space: nowrap;">
-              <a href="/hausmeister/tickets/<%= t.id %>" class="btn btn-secondary btn-sm">
+              <a href="<%= url('/hausmeister/tickets/' + t.id) %>" class="btn btn-secondary btn-sm">
                 Details &rarr;
               </a>
             </td>
