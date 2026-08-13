@@ -17,16 +17,25 @@ function renderForgotPassword(res, role, error = null, successMessage = null) {
   });
 }
 
-// Request Reset Link Page (for Caretaker or Admin)
-router.get(['/:role/passwort-vergessen', '/passwort-vergessen'], (req, res) => {
-  const roleParam = req.params.role || req.query.role || 'hausmeister';
-  const role = ['admin', 'administrator'].includes(roleParam) ? 'admin' : 'hausmeister';
+// Request Reset Link Page (Matches any URL containing 'passwort-vergessen')
+router.get(/passwort-vergessen/, (req, res) => {
+  const fullUrl = req.originalUrl || req.url || '';
+  const roleParam = req.params.role || req.query.role;
+  let role = 'hausmeister';
+  if (roleParam === 'admin' || fullUrl.includes('/admin')) {
+    role = 'admin';
+  }
   renderForgotPassword(res, role);
 });
 
-router.post(['/:role/passwort-vergessen', '/passwort-vergessen'], async (req, res) => {
-  const roleParam = req.params.role || req.body.role || req.query.role || 'hausmeister';
-  const role = ['admin', 'administrator'].includes(roleParam) ? 'admin' : 'hausmeister';
+router.post(/passwort-vergessen/, async (req, res) => {
+  const fullUrl = req.originalUrl || req.url || '';
+  const roleParam = req.params.role || req.body.role || req.query.role;
+  let role = 'hausmeister';
+  if (roleParam === 'admin' || fullUrl.includes('/admin')) {
+    role = 'admin';
+  }
+
   const targetRole = role === 'admin' ? 'admin' : 'caretaker';
   const recipientEmail = SettingsService.get(targetRole === 'admin' ? 'admin_email' : 'caretaker_email');
 
@@ -56,24 +65,18 @@ router.post(['/:role/passwort-vergessen', '/passwort-vergessen'], async (req, re
   }
 });
 
-// Perform Password Reset Page (Accepts any path structure including extra subpaths or legacy routes)
-router.get([
-  '/:role/passwort-zuruecksetzen',
-  '/passwort-zuruecksetzen',
-  '/hausmeister/passwort-zuruecksetzen',
-  '/admin/passwort-zuruecksetzen'
-], (req, res) => {
-  let roleParam = req.params.role || req.query.role;
-  if (!roleParam && req.originalUrl) {
-    if (req.originalUrl.includes('/admin')) roleParam = 'admin';
-    else roleParam = 'hausmeister';
-  }
-
-  const role = ['admin', 'administrator'].includes(roleParam) ? 'admin' : 'hausmeister';
+// Perform Password Reset Page (Matches ANY URL containing 'passwort-zuruecksetzen')
+router.get(/passwort-zuruecksetzen/, (req, res) => {
+  const fullUrl = req.originalUrl || req.url || '';
   const token = req.query.token;
 
   if (!token) {
     return res.redirect('/');
+  }
+
+  let role = 'hausmeister';
+  if (fullUrl.includes('/admin')) {
+    role = 'admin';
   }
 
   const roleName = role === 'admin' ? 'Administrator' : 'Hausmeister';
@@ -88,20 +91,15 @@ router.get([
   });
 });
 
-router.post([
-  '/:role/passwort-zuruecksetzen',
-  '/passwort-zuruecksetzen',
-  '/hausmeister/passwort-zuruecksetzen',
-  '/admin/passwort-zuruecksetzen'
-], async (req, res) => {
-  let roleParam = req.params.role || req.body.role || req.query.role;
-  if (!roleParam && req.originalUrl) {
-    if (req.originalUrl.includes('/admin')) roleParam = 'admin';
-    else roleParam = 'hausmeister';
+router.post(/passwort-zuruecksetzen/, async (req, res) => {
+  const fullUrl = req.originalUrl || req.url || '';
+  const { token, new_password, new_password_confirm } = req.body;
+
+  let role = 'hausmeister';
+  if (fullUrl.includes('/admin')) {
+    role = 'admin';
   }
 
-  const role = ['admin', 'administrator'].includes(roleParam) ? 'admin' : 'hausmeister';
-  const { token, new_password, new_password_confirm } = req.body;
   const targetRole = role === 'admin' ? 'admin' : 'caretaker';
   const roleName = role === 'admin' ? 'Administrator' : 'Hausmeister';
   const schoolName = SettingsService.get('school_name', 'Schule');
