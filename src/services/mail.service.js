@@ -32,14 +32,12 @@ const MailService = {
 
       const smtpConfig = SettingsService.get('smtp_config', {});
       const schoolName = SettingsService.get('school_name', 'Schule');
-      const adminEmail = SettingsService.get('admin_email', '');
-      const senderName = smtpConfig.from_name || `Hausmeister-System (${schoolName})`;
 
-      // Always send from the SMTP username. If from_email is set and differs from admin_email, use it, else fall back to SMTP user.
-      let senderMail = (smtpConfig.from_email && smtpConfig.from_email.trim());
-      if (!senderMail || (adminEmail && senderMail.toLowerCase() === adminEmail.toLowerCase())) {
-        senderMail = smtpConfig.user || 'noreply@schule.de';
-      }
+      // Configurable sender name
+      const senderName = (smtpConfig.from_name && smtpConfig.from_name.trim()) || `Hausmeister-System (${schoolName})`;
+
+      // Always send from the authenticated SMTP username to avoid SendAsDenied errors
+      const senderMail = smtpConfig.user || 'noreply@schule.de';
 
       const info = await transporter.sendMail({
         from: `"${senderName}" <${senderMail}>`,
@@ -126,9 +124,11 @@ const MailService = {
     return await this.sendMail({ to: ticket.submitter_email, subject, text, html });
   },
 
-  async sendPasswordResetMail(to, role, token, baseUrl) {
+  async sendPasswordResetMail(to, role, token, protocol, host, basePath = '') {
     const roleName = role === 'admin' ? 'Administrator' : 'Hausmeister';
-    const resetUrl = `${baseUrl}/${role === 'admin' ? 'admin' : 'hausmeister'}/passwort-zuruecksetzen?token=${token}`;
+    const cleanBase = basePath.replace(/\/$/, '');
+    const resetPath = role === 'admin' ? '/admin/passwort-zuruecksetzen' : '/hausmeister/passwort-zuruecksetzen';
+    const resetUrl = `${protocol}://${host}${cleanBase}${resetPath}?token=${token}`;
     const schoolName = SettingsService.get('school_name', 'Schule');
 
     const subject = `Passwort zurücksetzen für ${roleName} - ${schoolName}`;
