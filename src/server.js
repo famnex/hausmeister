@@ -137,6 +137,7 @@ app.use('/passwort-zuruecksetzen', authRoutes);
 app.use('/hausmeister/passwort-zuruecksetzen', authRoutes);
 app.use('/admin/passwort-zuruecksetzen', authRoutes);
 
+app.use('/hausmeister/hausmeister', caretakerRoutes); // Alias for legacy double /hausmeister email links
 app.use('/hausmeister', caretakerRoutes);
 app.use('/caretaker', caretakerRoutes);
 

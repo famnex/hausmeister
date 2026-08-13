@@ -66,11 +66,10 @@ router.post(['/ticket', '/hausmeister/ticket'], upload.array('attachments', 3), 
     const protocol = req.headers['x-forwarded-proto'] || req.protocol;
     const host = req.get('host');
     const basePath = res.locals.basePath || process.env.BASE_PATH || '';
-    const baseUrl = `${protocol}://${host}${basePath.replace(/\/$/, '')}`;
 
     // Send emails asynchronously (failures won't rollback ticket creation)
     MailService.sendTicketCreatedSubmitterConfirmation(ticket);
-    MailService.sendTicketCreatedCaretakerNotification(ticket, baseUrl);
+    MailService.sendTicketCreatedCaretakerNotification(ticket, protocol, host, basePath);
 
     res.render('public/confirmation', {
       schoolName,

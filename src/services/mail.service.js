@@ -79,12 +79,22 @@ const MailService = {
     return await this.sendMail({ to: ticket.submitter_email, subject, text, html });
   },
 
-  async sendTicketCreatedCaretakerNotification(ticket, baseUrl) {
+  async sendTicketCreatedCaretakerNotification(ticket, protocol, host, basePath = '') {
     const caretakerEmail = SettingsService.get('caretaker_email');
     if (!caretakerEmail) return { success: false, reason: 'Keine Hausmeister-E-Mail konfiguriert' };
 
     const schoolName = SettingsService.get('school_name', 'Schule');
-    const ticketUrl = `${baseUrl.replace(/\/$/, '')}/hausmeister/tickets/${ticket.id}`;
+    
+    // Normalize basePath: prevent duplicate /hausmeister/hausmeister
+    const cleanBase = (basePath || '').replace(/\/$/, '');
+    let fullPath = `/tickets/${ticket.id}`;
+    if (cleanBase) {
+      fullPath = `${cleanBase}/tickets/${ticket.id}`;
+    } else {
+      fullPath = `/hausmeister/tickets/${ticket.id}`;
+    }
+
+    const ticketUrl = `${protocol}://${host}${fullPath}`;
     const subject = `[Neues Ticket] ${ticket.ticket_number}: ${ticket.category_name_snapshot} in ${ticket.location}`;
     const text = `Neues Ticket erhalten!\n\nTicketnummer: ${ticket.ticket_number}\nMeldende(r): ${ticket.submitter_name} (${ticket.submitter_email})\nKategorie: ${ticket.category_name_snapshot}\nOrt/Raum: ${ticket.location}\n\nBeschreibung:\n${ticket.description}\n\nLink zum Ticket: ${ticketUrl}`;
     const html = `
