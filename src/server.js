@@ -17,6 +17,7 @@ const authRoutes = require('./routes/auth.routes');
 
 const app = express();
 const PORT = process.env.PORT || 5585;
+const BASE_PATH = (process.env.BASE_PATH || '').replace(/\/$/, '');
 
 // Security & Headers Middleware
 app.use(helmet({
@@ -24,31 +25,9 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
-// Rate Limiting to prevent brute-force attacks
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 300,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: 'Zu viele Anfragen von dieser IP, bitte versuche es später erneut.'
-});
-app.use(limiter);
-
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 15,
-  message: 'Zu viele fehlerhafte Anmeldeversuche. Bitte warte 15 Minuten.'
-});
-app.use('/hausmeister/login', loginLimiter);
-app.use('/admin/login', loginLimiter);
-
 // Body Parsers
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.json({ limit: '10mb' }));
-
-// Static Files & Uploads
-app.use(express.static(path.join(__dirname, '../public')));
-app.use('/uploads', express.static(process.env.UPLOADS_DIR ? path.resolve(process.env.UPLOADS_DIR) : path.join(__dirname, '../uploads')));
 
 // Session Setup
 const sessionSecret = process.env.SESSION_SECRET || 'hausmeister-secret-key-change-in-production';
@@ -71,24 +50,47 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.set('layout', 'layouts/main');
 
-// Global BasePath & View Locals Middleware
-app.use((req, res, next) => {
-  const envBasePath = (process.env.BASE_PATH || '').replace(/\/$/, '');
-  const headerPrefix = (req.headers['x-forwarded-prefix'] || '').replace(/\/$/, '');
-  const basePath = envBasePath || headerPrefix || '';
+// Create Main Router for App
+const appRouter = express.Router();
 
-  res.locals.basePath = basePath;
+// Static Files & Uploads within App Router
+appRouter.use(express.static(path.join(__dirname, '../public')));
+appRouter.use('/uploads', express.static(process.env.UPLOADS_DIR ? path.resolve(process.env.UPLOADS_DIR) : path.join(__dirname, '../uploads')));
+
+// Rate Limiting to prevent brute-force attacks
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Zu viele Anfragen von dieser IP, bitte versuche es später erneut.'
+});
+appRouter.use(limiter);
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 15,
+  message: 'Zu viele fehlerhafte Anmeldeversuche. Bitte warte 15 Minuten.'
+});
+appRouter.use('/hausmeister/login', loginLimiter);
+appRouter.use('/admin/login', loginLimiter);
+
+// Global View Locals Middleware
+appRouter.use((req, res, next) => {
+  const currentBasePath = req.baseUrl || BASE_PATH || '';
+
+  res.locals.basePath = currentBasePath;
   res.locals.schoolName = SettingsService.get('school_name', 'Schule');
   res.locals.schoolLogo = SettingsService.get('school_logo', null);
   res.locals.currentRole = req.session ? req.session.authenticatedRole : null;
   res.locals.currentPath = req.path;
 
-  // Intercept res.redirect to automatically handle base path / subpath deployments
+  // Intercept res.redirect to prefix basePath if relative to root
   const rawRedirect = res.redirect.bind(res);
   res.redirect = function (url) {
     if (typeof url === 'string' && url.startsWith('/') && !url.startsWith('//')) {
-      if (basePath && !url.startsWith(basePath)) {
-        return rawRedirect(basePath + url);
+      if (currentBasePath && !url.startsWith(currentBasePath)) {
+        return rawRedirect(currentBasePath + url);
       }
     }
     return rawRedirect(url);
@@ -98,14 +100,22 @@ app.use((req, res, next) => {
 });
 
 // Enforce Setup Check Middleware
-app.use(checkSetupCompleted);
+appRouter.use(checkSetupCompleted);
 
-// Mount Routes
-app.use('/setup', setupRoutes);
-app.use('/', publicRoutes);
-app.use('/hausmeister', caretakerRoutes);
-app.use('/admin', adminRoutes);
-app.use('/auth', authRoutes);
+// App Routes
+appRouter.use('/setup', setupRoutes);
+appRouter.use('/hausmeister', caretakerRoutes);
+appRouter.use('/admin', adminRoutes);
+appRouter.use('/auth', authRoutes);
+appRouter.use('/', publicRoutes);
+
+// Mount Router on BASE_PATH or Root
+if (BASE_PATH) {
+  app.use(BASE_PATH, appRouter);
+  app.get('/', (req, res) => res.redirect(BASE_PATH));
+} else {
+  app.use('/', appRouter);
+}
 
 // 404 Handler
 app.use((req, res) => {
@@ -129,6 +139,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`====================================================`);
   console.log(`Hausmeister Ticket-System läuft auf Port ${PORT}`);
+  console.log(`Base Path: ${BASE_PATH || '/'}`);
   console.log(`Umgebung: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Setup abgeschlossen: ${SettingsService.isSetupComplete()}`);
   console.log(`====================================================`);
