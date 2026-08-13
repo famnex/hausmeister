@@ -95,10 +95,13 @@ const TicketService = {
     `;
     const params = [];
 
-    if (status) {
+    if (status === '__active__') {
+      query += " AND t.status IN ('offen', 'in_bearbeitung')";
+    } else if (status) {
       query += ' AND t.status = ?';
       params.push(status);
     }
+
 
     if (categoryId) {
       query += ' AND t.category_id = ?';

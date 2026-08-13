@@ -9,10 +9,23 @@ const { requireAuth } = require('../middleware/auth.middleware');
 // Helper to render Dashboard
 function renderDashboard(req, res) {
   const schoolName = SettingsService.get('school_name', 'Schule');
-  const { status, category_id, employee_id, search } = req.query;
+  const { status, category_id, employee_id, search, view } = req.query;
+
+  // 'view' toggle: 'active' (default) shows offen + in_bearbeitung; 'closed' shows abgeschlossen
+  const showClosed = view === 'closed';
+
+  let effectiveStatus = status || null;
+  if (!effectiveStatus) {
+    // Default: only show active tickets unless user switched to closed view
+    if (!showClosed) {
+      effectiveStatus = '__active__'; // special token handled in TicketService
+    } else {
+      effectiveStatus = 'abgeschlossen';
+    }
+  }
 
   const tickets = TicketService.getAllTickets({
-    status: status || null,
+    status: effectiveStatus,
     categoryId: category_id ? parseInt(category_id, 10) : null,
     employeeId: employee_id || null,
     search: search || null
@@ -34,7 +47,8 @@ function renderDashboard(req, res) {
     tickets,
     categories,
     employees,
-    filters: { status: status || '', category_id: category_id || '', employee_id: employee_id || '', search: search || '' },
+    filters: { status: status || '', category_id: category_id || '', employee_id: employee_id || '', search: search || '', view: view || 'active' },
+    showClosed,
     stats,
     successMessage: req.query.msg || null
   });
@@ -78,13 +92,41 @@ router.get(['/dashboard', '/overview'], requireAuth('caretaker'), renderDashboar
 // Fast Inline Assignment from Overview
 router.post('/tickets/:id/assign-fast', requireAuth('caretaker'), (req, res) => {
   const ticketId = parseInt(req.params.id, 10);
-  const { employee_id } = req.body;
+  const { employee_id, redirect_back } = req.body;
 
   try {
     TicketService.assignEmployee(ticketId, employee_id ? parseInt(employee_id, 10) : null);
-    res.redirect('/hausmeister/dashboard?msg=' + encodeURIComponent('Zuweisung gespeichert.'));
+    const back = redirect_back || '/hausmeister/dashboard';
+    res.redirect(back + (back.includes('?') ? '&' : '?') + 'msg=' + encodeURIComponent('Zuweisung gespeichert.'));
   } catch (err) {
     res.redirect('/hausmeister/dashboard?msg=' + encodeURIComponent('Fehler beim Zuweisen: ' + err.message));
+  }
+});
+
+// Quick Status Toggle from Dashboard (close / reopen)
+router.post('/tickets/:id/quick-status', requireAuth('caretaker'), async (req, res) => {
+  const ticketId = parseInt(req.params.id, 10);
+  const { new_status, redirect_back } = req.body;
+  const back = redirect_back || '/hausmeister/dashboard';
+
+  const allowed = ['offen', 'in_bearbeitung', 'abgeschlossen'];
+  if (!allowed.includes(new_status)) {
+    return res.redirect(back + (back.includes('?') ? '&' : '?') + 'msg=' + encodeURIComponent('Ungültiger Status.'));
+  }
+
+  try {
+    const ticket = TicketService.getTicketById(ticketId);
+    if (ticket) {
+      TicketService.updateStatus(ticketId, new_status);
+      if (new_status === 'abgeschlossen') {
+        const updated = TicketService.getTicketById(ticketId);
+        MailService.sendTicketClosedSubmitterNotification(updated);
+      }
+    }
+    const label = new_status === 'abgeschlossen' ? 'Ticket abgeschlossen.' : 'Ticket wieder geöffnet.';
+    res.redirect(back + (back.includes('?') ? '&' : '?') + 'msg=' + encodeURIComponent(label));
+  } catch (err) {
+    res.redirect(back + (back.includes('?') ? '&' : '?') + 'msg=' + encodeURIComponent('Fehler: ' + err.message));
   }
 });
 
