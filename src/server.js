@@ -16,25 +16,24 @@ const adminRoutes = require('./routes/admin.routes');
 const authRoutes = require('./routes/auth.routes');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5585;
 
 // Security & Headers Middleware
 app.use(helmet({
-  contentSecurityPolicy: false, // Allows inline images/uploads for simplicity
+  contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
 }));
 
 // Rate Limiting to prevent brute-force attacks
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // Limit each IP to 300 requests per window
+  windowMs: 15 * 60 * 1000,
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
   message: 'Zu viele Anfragen von dieser IP, bitte versuche es später erneut.'
 });
 app.use(limiter);
 
-// Specific rate limit for login attempts
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 15,
@@ -62,7 +61,7 @@ app.use(session({
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production' && process.env.REQUIRE_HTTPS === 'true',
     sameSite: 'lax',
-    maxAge: 8 * 60 * 60 * 1000 // 8 hours
+    maxAge: 8 * 60 * 60 * 1000
   }
 }));
 
@@ -72,12 +71,29 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.set('layout', 'layouts/main');
 
-// Global View Locals Middleware
+// Global BasePath & View Locals Middleware
 app.use((req, res, next) => {
+  const envBasePath = (process.env.BASE_PATH || '').replace(/\/$/, '');
+  const headerPrefix = (req.headers['x-forwarded-prefix'] || '').replace(/\/$/, '');
+  const basePath = envBasePath || headerPrefix || '';
+
+  res.locals.basePath = basePath;
   res.locals.schoolName = SettingsService.get('school_name', 'Schule');
   res.locals.schoolLogo = SettingsService.get('school_logo', null);
   res.locals.currentRole = req.session ? req.session.authenticatedRole : null;
   res.locals.currentPath = req.path;
+
+  // Intercept res.redirect to automatically handle base path / subpath deployments
+  const rawRedirect = res.redirect.bind(res);
+  res.redirect = function (url) {
+    if (typeof url === 'string' && url.startsWith('/') && !url.startsWith('//')) {
+      if (basePath && !url.startsWith(basePath)) {
+        return rawRedirect(basePath + url);
+      }
+    }
+    return rawRedirect(url);
+  };
+
   next();
 });
 

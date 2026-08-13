@@ -2,12 +2,17 @@ const SettingsService = require('../services/settings.service');
 
 function checkSetupCompleted(req, res, next) {
   const isSetup = SettingsService.isSetupComplete();
+  const path = req.path;
+  const originalUrl = req.originalUrl || '';
 
-  if (!isSetup && !req.path.startsWith('/setup') && !req.path.startsWith('/public') && !req.path.startsWith('/css') && !req.path.startsWith('/js')) {
+  const isSetupRoute = path.includes('/setup') || originalUrl.includes('/setup');
+  const isPublicAsset = path.includes('/css') || path.includes('/js') || path.includes('/uploads') || path.includes('/favicon');
+
+  if (!isSetup && !isSetupRoute && !isPublicAsset) {
     return res.redirect('/setup');
   }
 
-  if (isSetup && req.path.startsWith('/setup')) {
+  if (isSetup && isSetupRoute) {
     return res.redirect('/');
   }
 
