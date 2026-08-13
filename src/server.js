@@ -24,7 +24,7 @@ function buildUrl(pathStr, basePath = '') {
   if (pathStr.startsWith('http://') || pathStr.startsWith('https://')) return pathStr;
 
   const cleanPath = pathStr.startsWith('/') ? pathStr : '/' + pathStr;
-  const cleanBase = basePath.replace(/\/$/, '');
+  const cleanBase = (basePath || '').replace(/\/$/, '');
 
   if (cleanBase) {
     if (cleanPath === cleanBase || cleanPath.startsWith(cleanBase + '/')) {
@@ -45,6 +45,14 @@ app.use(helmet({
 // Body Parsers
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.json({ limit: '10mb' }));
+
+// Static Files & Uploads (Mounted at root and /hausmeister subpath for maximum Nginx compatibility)
+app.use(express.static(path.join(__dirname, '../public')));
+app.use('/hausmeister', express.static(path.join(__dirname, '../public')));
+
+const uploadsDir = process.env.UPLOADS_DIR ? path.resolve(process.env.UPLOADS_DIR) : path.join(__dirname, '../uploads');
+app.use('/uploads', express.static(uploadsDir));
+app.use('/hausmeister/uploads', express.static(uploadsDir));
 
 // Session Setup
 const sessionSecret = process.env.SESSION_SECRET || 'hausmeister-secret-key-change-in-production';
@@ -67,13 +75,6 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.set('layout', 'layouts/main');
 
-// Create Main Router for App
-const appRouter = express.Router();
-
-// Static Files & Uploads within App Router
-appRouter.use(express.static(path.join(__dirname, '../public')));
-appRouter.use('/uploads', express.static(process.env.UPLOADS_DIR ? path.resolve(process.env.UPLOADS_DIR) : path.join(__dirname, '../uploads')));
-
 // Rate Limiting to prevent brute-force attacks
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -82,32 +83,37 @@ const limiter = rateLimit({
   legacyHeaders: false,
   message: 'Zu viele Anfragen von dieser IP, bitte versuche es später erneut.'
 });
-appRouter.use(limiter);
+app.use(limiter);
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 15,
   message: 'Zu viele fehlerhafte Anmeldeversuche. Bitte warte 15 Minuten.'
 });
-appRouter.use('/hausmeister/login', loginLimiter);
-appRouter.use('/admin/login', loginLimiter);
+app.use('/hausmeister/login', loginLimiter);
+app.use('/admin/login', loginLimiter);
 
-// Global View Locals Middleware
-appRouter.use((req, res, next) => {
-  const currentBasePath = req.baseUrl || BASE_PATH || '';
+// Global View Locals & Redirect Interceptor Middleware
+app.use((req, res, next) => {
+  const envBasePath = BASE_PATH;
+  const headerPrefix = (req.headers['x-forwarded-prefix'] || '').replace(/\/$/, '');
+  
+  let currentPrefix = envBasePath || headerPrefix || '';
+  if (!currentPrefix && req.originalUrl && req.originalUrl.startsWith('/hausmeister')) {
+    currentPrefix = '/hausmeister';
+  }
 
-  res.locals.basePath = currentBasePath;
-  res.locals.url = (p) => buildUrl(p, currentBasePath);
+  res.locals.basePath = currentPrefix;
+  res.locals.url = (p) => buildUrl(p, currentPrefix);
   res.locals.schoolName = SettingsService.get('school_name', 'Schule');
   res.locals.schoolLogo = SettingsService.get('school_logo', null);
   res.locals.currentRole = req.session ? req.session.authenticatedRole : null;
   res.locals.currentPath = req.path;
 
-  // Intercept res.redirect to prefix basePath if relative to root
   const rawRedirect = res.redirect.bind(res);
   res.redirect = function (urlTarget) {
     if (typeof urlTarget === 'string') {
-      return rawRedirect(buildUrl(urlTarget, currentBasePath));
+      return rawRedirect(buildUrl(urlTarget, currentPrefix));
     }
     return rawRedirect(urlTarget);
   };
@@ -116,22 +122,23 @@ appRouter.use((req, res, next) => {
 });
 
 // Enforce Setup Check Middleware
-appRouter.use(checkSetupCompleted);
+app.use(checkSetupCompleted);
 
-// App Routes
-appRouter.use('/setup', setupRoutes);
-appRouter.use('/hausmeister', caretakerRoutes);
-appRouter.use('/admin', adminRoutes);
-appRouter.use('/auth', authRoutes);
-appRouter.use('/', publicRoutes);
+// Mount Dual-Mode Routers for full compatibility with any Nginx proxy_pass configuration
+app.use('/setup', setupRoutes);
+app.use('/hausmeister/setup', setupRoutes);
 
-// Mount Router on BASE_PATH or Root
-if (BASE_PATH) {
-  app.use(BASE_PATH, appRouter);
-  app.get('/', (req, res) => res.redirect(BASE_PATH));
-} else {
-  app.use('/', appRouter);
-}
+app.use('/admin', adminRoutes);
+app.use('/hausmeister/admin', adminRoutes);
+
+app.use('/auth', authRoutes);
+app.use('/hausmeister/auth', authRoutes);
+
+app.use('/hausmeister', caretakerRoutes);
+app.use('/caretaker', caretakerRoutes);
+app.use('/login', caretakerRoutes); // Directly handles /login if Nginx strips /hausmeister
+
+app.use('/', publicRoutes);
 
 // 404 Handler
 app.use((req, res) => {
