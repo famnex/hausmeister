@@ -16,7 +16,7 @@ const fs = require('fs');
 
 const dbPath = process.env.DB_PATH
   ? path.resolve(process.env.DB_PATH)
-  : path.join(__dirname, '../data/hausmeister.db');
+  : path.join(__dirname, '../data/hausmeister.sqlite');
 
 if (!fs.existsSync(dbPath)) {
   console.error('Datenbankdatei nicht gefunden:', dbPath);
