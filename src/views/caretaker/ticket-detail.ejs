@@ -68,6 +68,7 @@
           Diese Kommentare sind nur für das Hausmeister-Team sichtbar und werden <strong>niemals</strong> an den Meldenden gesendet.
         </p>
 
+        <% if (currentRole !== 'admin') { %>
         <form action="<%= url('/hausmeister/tickets/' + ticket.id + '/comment') %>" method="POST" style="margin-bottom: 1.5rem;">
           <div class="form-group">
             <input type="text" name="author_name" class="form-control" placeholder="Dein Kürzel / Name (optional)" style="margin-bottom: 0.5rem;">
@@ -75,6 +76,7 @@
           </div>
           <button type="submit" class="btn btn-primary btn-sm">Kommentar speichern</button>
         </form>
+        <% } %>
 
         <div class="timeline">
           <% if (!ticket.comments || ticket.comments.length === 0) { %>
@@ -98,6 +100,7 @@
       <div class="card">
         <h3 class="card-title" style="font-size: 1.1rem;">Ticket verwalten</h3>
 
+        <% if (currentRole !== 'admin') { %>
         <form action="<%= url('/hausmeister/tickets/' + ticket.id + '/update') %>" method="POST">
           <div class="form-group">
             <label for="status">Status ändern</label>
@@ -124,6 +127,24 @@
             Änderungen speichern
           </button>
         </form>
+        <% } else { %>
+        <!-- Admin: read-only info -->
+        <div style="font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.75rem;">
+          <div>
+            <strong>Status:</strong><br>
+            <span class="badge badge-<%= ticket.status %>">
+              <%= ticket.status === 'offen' ? 'Offen' : (ticket.status === 'in_bearbeitung' ? 'In Bearbeitung' : 'Abgeschlossen') %>
+            </span>
+          </div>
+          <div>
+            <strong>Zugewiesener Mitarbeiter:</strong><br>
+            <%= ticket.assigned_employee_name || '— Nicht zugewiesen —' %>
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; padding: 0.5rem; background: #f8fafc; border-radius: 6px; border: 1px solid var(--border);">
+            ℹ️ Als Administrator haben Sie nur Lesezugriff auf Tickets.
+          </div>
+        </div>
+        <% } %>
       </div>
 
       <!-- Audit History Log -->

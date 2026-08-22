@@ -151,7 +151,7 @@
               <div style="font-size: 0.8rem; color: var(--text-muted);"><%= t.submitter_email %></div>
             </td>
             <td>
-              <% if (t.status !== 'abgeschlossen') { %>
+              <% if (t.status !== 'abgeschlossen' && currentRole !== 'admin') { %>
               <!-- Fast Inline Employee Assignment -->
               <form action="<%= url('/hausmeister/tickets/' + t.id + '/assign-fast') %>" method="POST" style="margin: 0;">
                 <input type="hidden" name="redirect_back" value="<%= redirectBack %>">
@@ -172,7 +172,8 @@
               <a href="<%= url('/hausmeister/tickets/' + t.id) %>" class="btn btn-secondary btn-sm" style="margin-right: 0.3rem;">
                 Details →
               </a>
-              <!-- Quick Status Toggle -->
+              <!-- Quick Status Toggle (nur für Hausmeister, nicht für Admin) -->
+              <% if (currentRole !== 'admin') { %>
               <form action="<%= url('/hausmeister/tickets/' + t.id + '/quick-status') %>" method="POST" style="display: inline; margin: 0;">
                 <input type="hidden" name="redirect_back" value="<%= redirectBack %>">
                 <% if (t.status !== 'abgeschlossen') { %>
@@ -193,7 +194,9 @@
                   </button>
                 <% } %>
               </form>
+              <% } %>
             </td>
+
           </tr>
         <% }); %>
       </tbody>

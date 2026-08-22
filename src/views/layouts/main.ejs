@@ -24,6 +24,7 @@
           <a href="<%= url('/hausmeister/passwort') %>" class="nav-link">Passwort</a>
           <a href="<%= url('/hausmeister/logout') %>" class="nav-link btn-logout">Abmelden</a>
         <% } else if (typeof currentRole !== 'undefined' && currentRole === 'admin') { %>
+          <a href="<%= url('/hausmeister/dashboard') %>" class="nav-link">Tickets ansehen</a>
           <a href="<%= url('/admin/einstellungen') %>" class="nav-link">Einstellungen</a>
           <a href="<%= url('/admin/passwort') %>" class="nav-link">Passwort</a>
           <a href="<%= url('/admin/logout') %>" class="nav-link btn-logout">Abmelden</a>
