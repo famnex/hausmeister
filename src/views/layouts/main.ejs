@@ -29,7 +29,7 @@
           <a href="<%= url('/admin/passwort') %>" class="nav-link">Passwort</a>
           <a href="<%= url('/admin/logout') %>" class="nav-link btn-logout">Abmelden</a>
         <% } else { %>
-          <a href="<%= url('/') %>" class="nav-link">Schadensmeldung erstellen</a>
+          <a href="<%= url('/') %>" class="nav-link">Hausmeisteranfrage stellen</a>
           <a href="<%= url('/hausmeister/login') %>" class="nav-link">Hausmeister-Login</a>
           <a href="<%= url('/admin/login') %>" class="nav-link">Administrator-Login</a>
         <% } %>
@@ -47,7 +47,7 @@
         &copy; <%= new Date().getFullYear() %> <%= schoolName || 'Schule' %> - Hausmeister Ticket-System
       </div>
       <div class="footer-links">
-        <a href="<%= url('/') %>">Meldung erstellen</a>
+        <a href="<%= url('/') %>">Hausmeisteranfrage stellen</a>
         <span>|</span>
         <a href="<%= url('/hausmeister/login') %>">Hausmeister-Bereich</a>
         <span>|</span>
